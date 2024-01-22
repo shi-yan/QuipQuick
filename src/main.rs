@@ -57,6 +57,8 @@ struct Post {
     title: String,
     tags: Vec<String>,
     word_count: usize,
+    repo: String,
+    blog_title: String,
 }
 
 impl Serialize for Post {
@@ -312,7 +314,7 @@ fn main() {
         fs::create_dir(&target_folder)
             .expect(format!("Unable to create target folder: {}.", &target_folder).as_str());
 
-        let title = if global.contains_key("title") {
+        let blog_title = if global.contains_key("title") {
             let mut title = String::new();
             if let Some(title_value) = global.get("title") {
                 if let toml::Value::String(title_str) = title_value {
@@ -324,7 +326,7 @@ fn main() {
             String::new()
         };
 
-        let description = if global.contains_key("description") {
+        let blog_description = if global.contains_key("description") {
             let mut description = String::new();
             if let Some(description_value) = global.get("description") {
                 if let toml::Value::String(description_str) = description_value {
@@ -332,6 +334,18 @@ fn main() {
                 }
             }
             description
+        } else {
+            String::new()
+        };
+
+        let repo = if global.contains_key("repo") {
+            let mut repo = String::new();
+            if let Some(repo_value) = global.get("repo") {
+                if let toml::Value::String(repo_str) = repo_value {
+                    repo = repo_str.clone();
+                }
+            }
+            repo
         } else {
             String::new()
         };
@@ -409,6 +423,8 @@ fn main() {
                         title: title.to_string(),
                         tags: tags,
                         word_count: word_count,
+                        blog_title: blog_title.clone(),
+                        repo: repo.clone()
                     };
 
                     post_list.push(data.clone());
@@ -448,7 +464,9 @@ fn main() {
 
         let data = json!({
             "posts": post_list,
-            "url": "test"
+            "repo": repo,
+            "blog_title": blog_title,
+            "blog_description": blog_description
         });
 
         let index_rendered = reg.render_template(&index_template, &data).unwrap();

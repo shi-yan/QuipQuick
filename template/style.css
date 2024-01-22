@@ -1,0 +1,255 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo+2&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Yanone+Kaffeesatz:wght@300&display=swap');
+
+body {
+    position: relative;
+    min-width: 100%;
+    min-height: 100%;
+    background-color: #1d1e20;
+    color: rgb(218, 218, 219);
+    overflow-x: hidden;
+    counter-reset: equnum;
+}
+
+#page {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto 800px auto;
+    grid-template-rows: 62px auto 320px;
+    grid-template-areas:
+        "header header header"
+        "left content right"
+        "footer footer footer";
+}
+
+#header {
+    grid-area: header;
+    justify-content: stretch;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 32px;
+    line-height: 32px;
+    padding: 10px;
+    vertical-align: middle;
+}
+
+
+.blog-title {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 42px;
+    line-height: 42px;
+    padding: 10px;
+    vertical-align: middle;
+    margin-bottom: 20px;
+}
+
+.blog-description {
+    padding: 10px;
+    margin: 10px;
+    font-family: "Open Sans", sans-serif;
+    color: rgb(186, 186, 186);
+    font-size: 20px;
+}
+
+.icon {
+    color: #dadadb;
+    vertical-align: middle;
+}
+
+.link {
+    text-decoration: none;
+    cursor: pointer;
+    font-style: italic;
+    color: rgb(186, 186, 186);
+}
+
+.video {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+#left {
+    grid-area: left;
+}
+
+#content {
+    grid-area: content;
+}
+
+#right {
+    grid-area: right;
+}
+
+#footer {
+    grid-area: footer;
+}
+
+#title {
+    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-size: 60px;
+    margin-top: 60px;
+    margin-bottom: 0px;
+}
+
+.content-item-title {
+    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-size: 40px;
+    margin: 8px;
+}
+
+#meta {
+    margin: 10px;
+    vertical-align: middle;
+    font-family: "Open Sans", sans-serif;
+    text-transform: uppercase;
+}
+
+.content-item {
+    padding: 10px;
+    border-radius: 8px;
+    margin: 10px;
+    background-color: #2e2e33;
+    font-family: "Open Sans", sans-serif;
+}
+
+.content-item:hover {
+    background-color: #3e3e43;
+}
+
+.content-item a {
+    text-decoration: none;
+    color: #dadadb;
+}
+
+.content-item-description {
+    margin-left: 20px;
+    color: rgb(186, 186, 186);
+}
+
+.content-item-meta {
+    margin-left: 20px;
+    color: rgb(186, 186, 186);
+    text-transform: uppercase;
+}
+
+.katex-display {
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 42px;
+}
+
+.katex-display::after {
+    counter-increment: eqnum;
+    content: "(" counter(eqnum) ")";
+    float: right;
+}
+
+article {
+    text-wrap: wrap;
+    word-break: break-word;
+    font-family: "Open Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 1rem;
+    font-variation-settings:
+        "wdth" 100;
+}
+
+article h1 {
+    font-size: 2.5em;
+    line-height: calc(1ex / 0.42);
+    margin: calc(1ex / 0.42) 0;
+}
+
+article h2 {
+    font-size: 2em;
+    line-height: calc(1ex / 0.42);
+    margin: calc(1ex / 0.42) 0;
+}
+
+article h3 {
+    font-size: 1.75em;
+    line-height: calc(1ex / 0.38);
+    margin: calc(1ex / 0.38) 0;
+}
+
+article h4 {
+    font-size: 1.5em;
+    line-height: calc(1ex / 0.37);
+    margin: calc(1ex / 0.37) 0;
+}
+
+article p {
+    font-size: 1em;
+    line-height: calc(1ex / 0.32);
+    margin: calc(1ex / 0.32) 0;
+}
+
+blockquote {
+    background: #2e2e33;
+    border-left: 10px solid #818181;
+    margin: 1.5em 10px;
+    padding: 0.5em 10px;
+    quotes: "\201C" "\201D" "\2018" "\2019";
+}
+
+blockquote:before {
+    color: #dadadb;
+    content: open-quote;
+    font-size: 4em;
+    line-height: 0.1em;
+    margin-right: 0.25em;
+    vertical-align: -0.4em;
+}
+
+blockquote p {
+    display: inline;
+}
+
+.code-block {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+
+.img-container {
+    max-width: 100%;
+    text-align: center;
+    font-style: italic;
+}
+
+.img-container img {
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 4px;
+    border-width: 0px;
+    cursor: pointer;
+}
+
+
+.comment {
+    background-color: #2e2e33;
+    border-radius: 8px;
+    display: block;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    color: #dadadb;
+    font-size: 24px;
+    margin: 8px;
+    font-family: 'Yanone Kaffeesatz', sans-serif;
+    line-height: 32px;
+    padding: 4px;
+}
+
+.comment:hover {
+    background-color: #4c4c4c;
+}
+
+code {
+    background-color: #181818;
+    border-radius: 4px;
+    padding: 2px;
+}
