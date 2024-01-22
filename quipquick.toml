@@ -1,0 +1,16 @@
+title = "Shi's blog"
+repo = "https://github.com/shi-yan/codestage"
+# need to have the slash
+prefix = ""
+target = "dist"
+url = "http://localhost:8000"
+meta_image = "meta.png"
+description = """
+CodeStage is a static site generator to build JS playground demos."""
+
+[[content]]
+title = "1. Basic Sample"
+folder = "diffusion_models_the_forward_pass"
+date = "2024-01-09"
+description = "A visual explanation of the forward pass of diffusion models."
+tags = ["machine learning","diffusion models","generative models"]

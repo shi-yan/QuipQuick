@@ -1,0 +1,20 @@
+[package]
+name = "quipquick"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+handlebars = "5.0"
+serde_json = "1.0"
+toml = "0.5"
+time = { version = "0.3", features = ["serde", "formatting", "parsing"]}
+serde = { version = "1.0", features = ["derive"] }
+rust-embed = "6.4"
+clap = { version = "4.3", features = ["derive"]}
+fs_extra = "1.2"
+markdown = "1.0.0-alpha.16"
+dateparser = "0.2"
+words-count = "0.1"
+chrono = "0.4"
