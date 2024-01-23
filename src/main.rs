@@ -66,6 +66,7 @@ struct Post {
     blog_title: String,
     quipquick_version: String,
     current_time: String,
+    google_analytics: String
 }
 
 impl Serialize for Post {
@@ -100,13 +101,21 @@ impl Serialize for Post {
             .unwrap();
         map.serialize_entry("current_time", &self.current_time)
             .unwrap();
+        map.serialize_entry("google_analytics", &self.google_analytics).unwrap();
         map.end()
     }
 }
 
-struct ImageInfo {
-    should_generate_thumb: bool,
-    path: String,
+
+fn generate_google_analytics_id(id:&str) -> String {
+    return format!("<!-- Google tag (gtag.js) -->\n\
+    <script async src=\"https://www.googletagmanager.com/gtag/js?id={}\"></script>\n\
+    <script>\n\
+      window.dataLayer = window.dataLayer || [];\n\
+      function gtag() {{ dataLayer.push(arguments); }}\n\
+      gtag('js', new Date());\n\
+      gtag('config', '{}');\n\
+    </script>",id,id);
 }
 
 fn render_markdown(
@@ -426,6 +435,18 @@ fn main() {
             String::new()
         };
 
+        let google_analytics_id = if global.contains_key("google_analytics_id") {
+            let mut google_analytics_id = String::new();
+            if let Some(google_analytics_id_value) = global.get("google_analytics_id") {
+                if let toml::Value::String(google_analytics_id_str) = google_analytics_id_value {
+                    google_analytics_id = google_analytics_id_str.clone();
+                }
+            }
+            google_analytics_id
+        } else {
+            String::new()
+        };
+
         let content = match global.get("content") {
             None => {
                 println!("Warning: No content detected.");
@@ -509,6 +530,7 @@ fn main() {
                         repo: repo.clone(),
                         quipquick_version: VERSION.to_string(),
                         current_time: format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
+                        google_analytics: generate_google_analytics_id(&google_analytics_id)
                     };
 
                     post_list.push(data.clone());
@@ -545,7 +567,8 @@ fn main() {
             "blog_title": blog_title,
             "blog_description": blog_description,
             "quipquick_version": VERSION,
-            "current_time": format!("{}", current_time.format("%Y-%m-%d %H:%M:%S"))
+            "current_time": format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
+            "google_analytics": generate_google_analytics_id(&google_analytics_id)
         });
 
         let index_rendered = reg.render_template(&index_template, &data).unwrap();
