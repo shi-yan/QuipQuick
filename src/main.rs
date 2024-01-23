@@ -267,7 +267,7 @@ fn render_markdown(
     };
 }
 
-fn deploy_templates() {
+fn populate_templates() {
     let target_folder = "template";
     let target_folder_exists = Path::new("template").exists();
 
@@ -280,15 +280,18 @@ fn deploy_templates() {
     } else {
         fs::create_dir(target_folder)
         .expect(format!("Unable to create template folder: {}.", target_folder).as_str());
-
     }
 
+    let files = ["post.html", "index.html", "style.css"];
 
-    let post_template_exists = Path::new(format!("{}/post.html", target_folder).as_str()).exists();
+    for f in files {
+        let file_path = format!("{}/{}", target_folder,f);
+        let template_exists = Path::new(&file_path).exists();
 
-    if !post_template_exists {
-        let f = Template::get("index.html").unwrap();
-
+        if !template_exists {
+            let content = Template::get(f).unwrap();
+            fs::write(&file_path, content.data).unwrap();
+        }
     }
 
 }
@@ -304,6 +307,9 @@ fn main() {
       \\___,_\\ \\__,_|_| .__/\\___,_\\ \\__,_|_|\\___|_|\\_\\
                      |_|                             "
     );
+
+    populate_templates();
+
     const VERSION: &str = env!("CARGO_PKG_VERSION");
 
     let contents =
@@ -489,12 +495,8 @@ fn main() {
             }
         });
 
-        let f = Template::get("index.html").unwrap();
-
-
-        /*let index_template = fs::read_to_string("template/index.html")
-            .expect("Should have been able to read the file");*/
-        let index_template = String::from_utf8( f.data.to_vec()).unwrap();
+        let index_template = fs::read_to_string("template/index.html")
+            .expect("Should have been able to read the file");
 
         let data = json!({
             "posts": post_list,
@@ -509,9 +511,8 @@ fn main() {
 
         fs::write(output_path, index_rendered).unwrap();
 
-        let css_f = Template::get("style.css").unwrap();
+        fs::copy("template/style.css", format!("{}/style.css", target_folder)).unwrap();
 
-        fs::write(format!("{}/style.css", target_folder), css_f.data.to_vec()).unwrap();
     }
 
     /*let mut reg = Handlebars::new();
