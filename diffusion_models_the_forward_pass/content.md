@@ -1,6 +1,5 @@
 ---
 title: "1. Basic Sample"
-folder: "diffusion_models_the_forward_pass"
 date: "2024-01-09"
 description: "A visual explanation of the forward pass of diffusion models."
 tags: ["machine learning","diffusion models","generative models"]

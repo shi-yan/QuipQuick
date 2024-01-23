@@ -32,7 +32,26 @@ use image::io::Reader as ImageReader;
 use markdown::{Constructs, Options, ParseOptions};
 use rust_embed::{EmbeddedFile, RustEmbed};
 use serde::ser::{Serialize, SerializeMap, SerializeSeq, Serializer};
+use serde::Deserialize;
 use words_count::WordsCount;
+
+fn default_as_false() -> bool {
+    false
+}
+
+#[derive(Deserialize, Debug)]
+struct PostInfo {
+    title: String,
+    #[serde(default)]
+    folder: String,
+    date: String,
+    #[serde(default)]
+    description: String,
+    #[serde(default)]
+    tags: Vec<String>,
+    #[serde(default = "default_as_false")]
+    is_draft: bool,
+}
 
 #[derive(RustEmbed)]
 #[folder = "template_src/"]
@@ -67,7 +86,7 @@ struct Post {
     quipquick_version: String,
     current_time: String,
     google_analytics: String,
-    read_time: u32
+    read_time: u32,
 }
 
 impl Serialize for Post {
@@ -102,22 +121,25 @@ impl Serialize for Post {
             .unwrap();
         map.serialize_entry("current_time", &self.current_time)
             .unwrap();
-        map.serialize_entry("google_analytics", &self.google_analytics).unwrap();
+        map.serialize_entry("google_analytics", &self.google_analytics)
+            .unwrap();
         map.serialize_entry("read_time", &self.read_time).unwrap();
         map.end()
     }
 }
 
-
-fn generate_google_analytics_id(id:&str) -> String {
-    return format!("<!-- Google tag (gtag.js) -->\n\
+fn generate_google_analytics_id(id: &str) -> String {
+    return format!(
+        "<!-- Google tag (gtag.js) -->\n\
     <script async src=\"https://www.googletagmanager.com/gtag/js?id={}\"></script>\n\
     <script>\n\
       window.dataLayer = window.dataLayer || [];\n\
       function gtag() {{ dataLayer.push(arguments); }}\n\
       gtag('js', new Date());\n\
       gtag('config', '{}');\n\
-    </script>",id,id);
+    </script>",
+        id, id
+    );
 }
 
 fn render_markdown(
@@ -126,13 +148,14 @@ fn render_markdown(
     folder: &str,
     target_folder: &str,
     count: &mut usize,
+    meta: &mut PostInfo,
 ) {
     match node {
         Paragraph(p) => {
             output.push_str("<p>");
 
             for n in node.children().unwrap() {
-                render_markdown(n, output, folder, target_folder, count);
+                render_markdown(n, output, folder, target_folder, count, meta);
             }
 
             output.push_str("</p>");
@@ -143,14 +166,14 @@ fn render_markdown(
         }
         Root(r) => {
             for n in &r.children {
-                render_markdown(n, output, folder, target_folder, count);
+                render_markdown(n, output, folder, target_folder, count, meta);
             }
         }
         BlockQuote(b) => {
             output.push_str("<blockquote>");
 
             for n in &b.children {
-                render_markdown(n, output, folder, target_folder, count);
+                render_markdown(n, output, folder, target_folder, count, meta);
             }
 
             output.push_str("</blockquote>");
@@ -167,7 +190,7 @@ fn render_markdown(
             }
 
             for n in &l.children {
-                render_markdown(n, output, folder, target_folder, count);
+                render_markdown(n, output, folder, target_folder, count, meta);
             }
 
             if l.ordered {
@@ -180,7 +203,8 @@ fn render_markdown(
             println!("{:?}", c);
         }
         Yaml(c) => {
-            println!("{:?}", c);
+            *meta = serde_yaml::from_str(&c.value).unwrap();
+            println!("{:?}", meta);
         }
         Break(_) => {
             output.push_str("<br />");
@@ -199,7 +223,7 @@ fn render_markdown(
         Emphasis(e) => {
             output.push_str("<em>");
             for n in &e.children {
-                render_markdown(n, output, folder, target_folder, count);
+                render_markdown(n, output, folder, target_folder, count, meta);
             }
             output.push_str("</em>");
         }
@@ -261,7 +285,7 @@ fn render_markdown(
                 *count += words_count::count(title).words;
             }
             for n in &l.children {
-                render_markdown(n, output, folder, target_folder, count);
+                render_markdown(n, output, folder, target_folder, count, meta);
             }
             output.push_str("</a>");
         }
@@ -271,7 +295,7 @@ fn render_markdown(
         Strong(s) => {
             output.push_str("<strong>");
             for n in &s.children {
-                render_markdown(n, output, folder, target_folder, count);
+                render_markdown(n, output, folder, target_folder, count, meta);
             }
             output.push_str("</strong>");
         }
@@ -301,7 +325,7 @@ fn render_markdown(
         Heading(h) => {
             output.push_str(format!("<h{} >", h.depth).as_str());
             for n in &h.children {
-                render_markdown(n, output, folder, target_folder, count);
+                render_markdown(n, output, folder, target_folder, count, meta);
             }
             output.push_str(format!("</h{}>", h.depth).as_str());
         }
@@ -309,7 +333,7 @@ fn render_markdown(
         ListItem(li) => {
             output.push_str("<li>");
             for n in &li.children {
-                render_markdown(n, output, folder, target_folder, count);
+                render_markdown(n, output, folder, target_folder, count, meta);
             }
             output.push_str("</li>");
         }
@@ -467,86 +491,74 @@ fn main() {
 
         if let toml::Value::Array(ref content) = content {
             for c in content {
-                if let toml::Value::Table(ref post) = c {
-                    //print!("{:?}", post);
+                let folder = c.as_str().unwrap();
 
-                    let date = post.get("date").unwrap().as_str().unwrap();
-                    println!("date {}", date);
-                    let d = date.parse::<DateTimeUtc>().unwrap().0;
-                    println!("{:?}", d);
-                    let description = post.get("description").unwrap().as_str().unwrap();
-                    let folder = post.get("folder").unwrap().as_str().unwrap();
-                    let title = post.get("title").unwrap().as_str().unwrap();
-                    let tags_value = post.get("tags").unwrap().as_array().unwrap();
+                let target_folder_exists =
+                    Path::new(format!("{}/{}", target_folder, folder).as_str()).exists();
 
-                    let mut tags = Vec::new();
+                if !target_folder_exists {
+                    fs::create_dir(format!("{}/{}", target_folder, folder).as_str())
+                        .expect(format!("Unable to create target folder: {}.", &folder).as_str());
+                }
 
-                    for t in tags_value {
-                        tags.push(t.as_str().unwrap().to_string());
-                    }
+                let path = format!("{}/content.md", folder);
 
-                    let target_folder_exists =
-                        Path::new(format!("{}/{}", target_folder, folder).as_str()).exists();
+                let markdown =
+                    fs::read_to_string(path).expect("Should have been able to read the file");
 
-                    if !target_folder_exists {
-                        fs::create_dir(format!("{}/{}", target_folder, folder).as_str()).expect(
-                            format!("Unable to create target folder: {}.", &folder).as_str(),
-                        );
-                    }
+                //println!("markdown {}", markdown);
 
-                    let path = format!("{}/content.md", folder);
+                let mut options = Options::gfm();
+                options.parse.constructs.math_text = true;
+                options.parse.constructs.frontmatter = true;
+                options.parse.constructs.math_flow = true;
 
-                    let markdown =
-                        fs::read_to_string(path).expect("Should have been able to read the file");
+                let ast = markdown::to_mdast(&markdown, &options.parse).unwrap();
 
-                    //println!("markdown {}", markdown);
-
-                    let mut options = Options::gfm();
-                    options.parse.constructs.math_text = true;
-                    options.parse.constructs.frontmatter = true;
-                    options.parse.constructs.math_flow = true;
-
-                    let ast = markdown::to_mdast(&markdown, &options.parse).unwrap();
-
-                    //println!("{:?}", ast);
-                    let mut rendered_string = String::new();
-                    let mut word_count: usize = 0;
-                    render_markdown(
-                        &ast,
-                        &mut rendered_string,
-                        folder,
-                        &target_folder,
-                        &mut word_count,
-                    );
-                    //println!("word count: {} {}", word_count, folder);
+                //println!("{:?}", ast);
+                let mut rendered_string = String::new();
+                let mut word_count: usize = 0;
+                let mut meta: PostInfo = PostInfo {
+                    title: String::new(),
+                    folder: String::new(),
+                    date: String::new(),
+                    description: String::new(),
+                    tags: vec![],
+                    is_draft: false,
+                };
+                render_markdown(
+                    &ast,
+                    &mut rendered_string,
+                    folder,
+                    &target_folder,
+                    &mut word_count,
+                    &mut meta,
+                );
+                if !meta.is_draft {
+                    let d = meta.date.parse::<DateTimeUtc>().unwrap().0;
 
                     let data = Post {
                         date: d,
-                        description: description.to_string(),
+                        description: meta.description,
                         src: folder.to_string(),
                         md: rendered_string,
-                        title: title.to_string(),
-                        tags: tags,
+                        title: meta.title,
+                        tags: meta.tags,
                         word_count: word_count,
                         blog_title: blog_title.clone(),
                         repo: repo.clone(),
                         quipquick_version: VERSION.to_string(),
                         current_time: format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
                         google_analytics: generate_google_analytics_id(&google_analytics_id),
-                        read_time: word_count as u32 / 238
+                        read_time: word_count as u32 / 238,
                     };
-
                     post_list.push(data.clone());
-
-                    //println!("{} {:?}", rendered_string, images);
 
                     let rendered = reg.render_template(&template, &data).unwrap();
 
                     let output_path = format!("{}/{}/index.html", target_folder, folder);
 
                     fs::write(output_path, rendered).unwrap();
-                } else {
-                    println!("Toml Format Error: A chapter needs to be a table format.");
                 }
             }
         }

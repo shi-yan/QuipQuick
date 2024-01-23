@@ -9,9 +9,6 @@ description = """
 CodeStage is a static site generator to build JS playground demos."""
 google_analytics_id = "G-0N1753LT3Y"
 
-[[content]]
-title = "1. Basic Sample"
-folder = "diffusion_models_the_forward_pass"
-date = "2024-01-09"
-description = "A visual explanation of the forward pass of diffusion models."
-tags = ["machine learning","diffusion models","generative models"]
+content =[
+    "diffusion_models_the_forward_pass",
+]
