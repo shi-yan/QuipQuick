@@ -66,7 +66,8 @@ struct Post {
     blog_title: String,
     quipquick_version: String,
     current_time: String,
-    google_analytics: String
+    google_analytics: String,
+    read_time: u32
 }
 
 impl Serialize for Post {
@@ -102,6 +103,7 @@ impl Serialize for Post {
         map.serialize_entry("current_time", &self.current_time)
             .unwrap();
         map.serialize_entry("google_analytics", &self.google_analytics).unwrap();
+        map.serialize_entry("read_time", &self.read_time).unwrap();
         map.end()
     }
 }
@@ -530,7 +532,8 @@ fn main() {
                         repo: repo.clone(),
                         quipquick_version: VERSION.to_string(),
                         current_time: format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
-                        google_analytics: generate_google_analytics_id(&google_analytics_id)
+                        google_analytics: generate_google_analytics_id(&google_analytics_id),
+                        read_time: word_count as u32 / 238
                     };
 
                     post_list.push(data.clone());
