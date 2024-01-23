@@ -9,8 +9,6 @@ use markdown::mdast::Node::{
     MdxFlowExpression, MdxJsxFlowElement, MdxJsxTextElement, MdxTextExpression, MdxjsEsm,
     Paragraph, Root, Strong, Text, ThematicBreak, Toml, Yaml,
 };
-use rust_embed::EmbeddedFile;
-use rust_embed::RustEmbed;
 use serde_json::json;
 use std::cmp::Ordering;
 use std::error::Error;
@@ -33,6 +31,10 @@ use handlebars::ScopedJson;
 use markdown::{Constructs, Options, ParseOptions};
 use serde::ser::{Serialize, SerializeMap, SerializeSeq, Serializer};
 use words_count::WordsCount;
+use rust_embed::{EmbeddedFile,RustEmbed};
+#[derive(RustEmbed)]
+#[folder = "template_src/"]
+struct Template;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -265,6 +267,32 @@ fn render_markdown(
     };
 }
 
+fn deploy_templates() {
+    let target_folder = "template";
+    let target_folder_exists = Path::new("template").exists();
+
+    if target_folder_exists {
+        let target_is_dir: bool = Path::new(target_folder).is_dir();
+        if !target_is_dir {
+            println!("template {} is not a folder.", target_folder);
+            return;
+        }
+    } else {
+        fs::create_dir(target_folder)
+        .expect(format!("Unable to create template folder: {}.", target_folder).as_str());
+
+    }
+
+
+    let post_template_exists = Path::new(format!("{}/post.html", target_folder).as_str()).exists();
+
+    if !post_template_exists {
+        let f = Template::get("index.html").unwrap();
+
+    }
+
+}
+
 fn main() {
     let args = Args::parse();
     //https://patorjk.com/software/taag/#p=display&f=Ogre&t=QuipQuick
@@ -443,6 +471,8 @@ fn main() {
                     let output_path = format!("{}/{}/index.html", target_folder, folder);
 
                     fs::write(output_path, rendered).unwrap();
+
+
                 } else {
                     println!("Toml Format Error: A chapter needs to be a table format.");
                 }
@@ -459,8 +489,12 @@ fn main() {
             }
         });
 
-        let index_template = fs::read_to_string("template/index.html")
-            .expect("Should have been able to read the file");
+        let f = Template::get("index.html").unwrap();
+
+
+        /*let index_template = fs::read_to_string("template/index.html")
+            .expect("Should have been able to read the file");*/
+        let index_template = String::from_utf8( f.data.to_vec()).unwrap();
 
         let data = json!({
             "posts": post_list,
@@ -474,6 +508,10 @@ fn main() {
         let output_path = format!("{}/index.html", target_folder);
 
         fs::write(output_path, index_rendered).unwrap();
+
+        let css_f = Template::get("style.css").unwrap();
+
+        fs::write(format!("{}/style.css", target_folder), css_f.data.to_vec()).unwrap();
     }
 
     /*let mut reg = Handlebars::new();
