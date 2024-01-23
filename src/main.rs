@@ -29,9 +29,9 @@ use fs_extra::TransitProcess;
 use handlebars::JsonValue;
 use handlebars::ScopedJson;
 use markdown::{Constructs, Options, ParseOptions};
+use rust_embed::{EmbeddedFile, RustEmbed};
 use serde::ser::{Serialize, SerializeMap, SerializeSeq, Serializer};
 use words_count::WordsCount;
-use rust_embed::{EmbeddedFile,RustEmbed};
 #[derive(RustEmbed)]
 #[folder = "template_src/"]
 struct Template;
@@ -61,6 +61,8 @@ struct Post {
     word_count: usize,
     repo: String,
     blog_title: String,
+    quipquick_version: String,
+    current_time: String,
 }
 
 impl Serialize for Post {
@@ -88,6 +90,12 @@ impl Serialize for Post {
         map.serialize_entry("title", &self.title).unwrap();
         map.serialize_entry("tags", &self.tags).unwrap();
         map.serialize_entry("word_count", &self.word_count).unwrap();
+        map.serialize_entry("repo", &self.repo).unwrap();
+        map.serialize_entry("blog_title", &self.blog_title).unwrap();
+        map.serialize_entry("quipquick_version", &self.quipquick_version)
+            .unwrap();
+        map.serialize_entry("current_time", &self.current_time)
+            .unwrap();
         map.end()
     }
 }
@@ -267,7 +275,7 @@ fn render_markdown(
     };
 }
 
-fn populate_templates() {
+fn populate_templates(force: bool) {
     let target_folder = "template";
     let target_folder_exists = Path::new("template").exists();
 
@@ -279,21 +287,20 @@ fn populate_templates() {
         }
     } else {
         fs::create_dir(target_folder)
-        .expect(format!("Unable to create template folder: {}.", target_folder).as_str());
+            .expect(format!("Unable to create template folder: {}.", target_folder).as_str());
     }
 
     let files = ["post.html", "index.html", "style.css"];
 
     for f in files {
-        let file_path = format!("{}/{}", target_folder,f);
+        let file_path = format!("{}/{}", target_folder, f);
         let template_exists = Path::new(&file_path).exists();
 
-        if !template_exists {
+        if force || !template_exists {
             let content = Template::get(f).unwrap();
             fs::write(&file_path, content.data).unwrap();
         }
     }
-
 }
 
 fn main() {
@@ -307,8 +314,9 @@ fn main() {
       \\___,_\\ \\__,_|_| .__/\\___,_\\ \\__,_|_|\\___|_|\\_\\
                      |_|                             "
     );
+    let current_time = Local::now();
 
-    populate_templates();
+    populate_templates(true);
 
     const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -458,7 +466,9 @@ fn main() {
                         tags: tags,
                         word_count: word_count,
                         blog_title: blog_title.clone(),
-                        repo: repo.clone()
+                        repo: repo.clone(),
+                        quipquick_version: VERSION.to_string(),
+                        current_time: format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
                     };
 
                     post_list.push(data.clone());
@@ -477,8 +487,6 @@ fn main() {
                     let output_path = format!("{}/{}/index.html", target_folder, folder);
 
                     fs::write(output_path, rendered).unwrap();
-
-
                 } else {
                     println!("Toml Format Error: A chapter needs to be a table format.");
                 }
@@ -502,7 +510,9 @@ fn main() {
             "posts": post_list,
             "repo": repo,
             "blog_title": blog_title,
-            "blog_description": blog_description
+            "blog_description": blog_description,
+            "quipquick_version": VERSION,
+            "current_time": format!("{}", current_time.format("%Y-%m-%d %H:%M:%S"))
         });
 
         let index_rendered = reg.render_template(&index_template, &data).unwrap();
@@ -512,7 +522,6 @@ fn main() {
         fs::write(output_path, index_rendered).unwrap();
 
         fs::copy("template/style.css", format!("{}/style.css", target_folder)).unwrap();
-
     }
 
     /*let mut reg = Handlebars::new();
