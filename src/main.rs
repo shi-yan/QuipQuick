@@ -28,10 +28,12 @@ use fs_extra::dir::CopyOptions;
 use fs_extra::TransitProcess;
 use handlebars::JsonValue;
 use handlebars::ScopedJson;
+use image::io::Reader as ImageReader;
 use markdown::{Constructs, Options, ParseOptions};
 use rust_embed::{EmbeddedFile, RustEmbed};
 use serde::ser::{Serialize, SerializeMap, SerializeSeq, Serializer};
 use words_count::WordsCount;
+
 #[derive(RustEmbed)]
 #[folder = "template_src/"]
 struct Template;
@@ -102,10 +104,16 @@ impl Serialize for Post {
     }
 }
 
+struct ImageInfo {
+    should_generate_thumb: bool,
+    path: String,
+}
+
 fn render_markdown(
     node: &Node,
     output: &mut String,
-    img_path: &mut Vec<String>,
+    folder: &str,
+    target_folder: &str,
     count: &mut usize,
 ) {
     match node {
@@ -113,7 +121,7 @@ fn render_markdown(
             output.push_str("<p>");
 
             for n in node.children().unwrap() {
-                render_markdown(n, output, img_path, count);
+                render_markdown(n, output, folder, target_folder, count);
             }
 
             output.push_str("</p>");
@@ -124,14 +132,14 @@ fn render_markdown(
         }
         Root(r) => {
             for n in &r.children {
-                render_markdown(n, output, img_path, count);
+                render_markdown(n, output, folder, target_folder, count);
             }
         }
         BlockQuote(b) => {
             output.push_str("<blockquote>");
 
             for n in &b.children {
-                render_markdown(n, output, img_path, count);
+                render_markdown(n, output, folder, target_folder, count);
             }
 
             output.push_str("</blockquote>");
@@ -148,7 +156,7 @@ fn render_markdown(
             }
 
             for n in &l.children {
-                render_markdown(n, output, img_path, count);
+                render_markdown(n, output, folder, target_folder, count);
             }
 
             if l.ordered {
@@ -180,7 +188,7 @@ fn render_markdown(
         Emphasis(e) => {
             output.push_str("<em>");
             for n in &e.children {
-                render_markdown(n, output, img_path, count);
+                render_markdown(n, output, folder, target_folder, count);
             }
             output.push_str("</em>");
         }
@@ -191,20 +199,44 @@ fn render_markdown(
         }
         Image(i) => {
             output.push_str("<div class=\"img-container\">");
-            output.push_str(
-                format!(
-                    "<img class=\"img\" src=\"{}\" alt=\"{}\" />",
-                    &i.url, &i.alt
-                )
-                .as_str(),
-            );
+
+            let img = ImageReader::open(format!("{}/{}", folder, i.url))
+                .unwrap()
+                .decode()
+                .unwrap();
+
+            if img.width() > 512 || img.height() > 512 {
+                let thumb = img.resize_to_fill(512, 512, image::imageops::FilterType::Lanczos3);
+                let thumb_path = format!("{}/{}/thumb_{}", target_folder, folder, i.url);
+                thumb.save(thumb_path).unwrap();
+                output.push_str(
+                    format!(
+                        "<img class=\"img\" onclick=\"openImage(this)\" src=\"thumb_{}\" original_src=\"{}\" alt=\"{}\" />",
+                        &i.url,&i.url, &i.alt
+                    )
+                    .as_str(),
+                );
+            } else {
+                output.push_str(
+                    format!(
+                        "<img class=\"img\" onclick=\"openImage(this)\" src=\"{}\" alt=\"{}\" />",
+                        &i.url, &i.alt
+                    )
+                    .as_str(),
+                );
+            }
+
             if i.alt.len() > 0 {
                 output.push_str("<div class=\"img-title\">");
                 output.push_str(&i.alt);
                 output.push_str("</div>");
             }
             output.push_str("</div>");
-            img_path.push(i.url.clone());
+
+            let copy_from = format!("{}/{}", folder, i.url);
+            let copy_to = format!("{}/{}/{}", target_folder, folder, i.url);
+
+            std::fs::copy(copy_from, copy_to).unwrap();
         }
         ImageReference(_) => {}
         MdxJsxTextElement(_) => {}
@@ -218,7 +250,7 @@ fn render_markdown(
                 *count += words_count::count(title).words;
             }
             for n in &l.children {
-                render_markdown(n, output, img_path, count);
+                render_markdown(n, output, folder, target_folder, count);
             }
             output.push_str("</a>");
         }
@@ -228,7 +260,7 @@ fn render_markdown(
         Strong(s) => {
             output.push_str("<strong>");
             for n in &s.children {
-                render_markdown(n, output, img_path, count);
+                render_markdown(n, output, folder, target_folder, count);
             }
             output.push_str("</strong>");
         }
@@ -258,7 +290,7 @@ fn render_markdown(
         Heading(h) => {
             output.push_str(format!("<h{} >", h.depth).as_str());
             for n in &h.children {
-                render_markdown(n, output, img_path, count);
+                render_markdown(n, output, folder, target_folder, count);
             }
             output.push_str(format!("</h{}>", h.depth).as_str());
         }
@@ -266,7 +298,7 @@ fn render_markdown(
         ListItem(li) => {
             output.push_str("<li>");
             for n in &li.children {
-                render_markdown(n, output, img_path, count);
+                render_markdown(n, output, folder, target_folder, count);
             }
             output.push_str("</li>");
         }
@@ -455,9 +487,14 @@ fn main() {
 
                     //println!("{:?}", ast);
                     let mut rendered_string = String::new();
-                    let mut images: Vec<String> = Vec::new();
                     let mut word_count: usize = 0;
-                    render_markdown(&ast, &mut rendered_string, &mut images, &mut word_count);
+                    render_markdown(
+                        &ast,
+                        &mut rendered_string,
+                        folder,
+                        &target_folder,
+                        &mut word_count,
+                    );
                     //println!("word count: {} {}", word_count, folder);
 
                     let data = Post {
@@ -477,13 +514,6 @@ fn main() {
                     post_list.push(data.clone());
 
                     //println!("{} {:?}", rendered_string, images);
-
-                    for i in images {
-                        let copy_from = format!("{}/{}", folder, i);
-                        let copy_to = format!("{}/{}/{}", target_folder, folder, i);
-
-                        std::fs::copy(copy_from, copy_to).unwrap();
-                    }
 
                     let rendered = reg.render_template(&template, &data).unwrap();
 
