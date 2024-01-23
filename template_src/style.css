@@ -8,13 +8,16 @@ body {
     color: rgb(218, 218, 219);
     overflow-x: hidden;
     counter-reset: equnum;
+    height: 100vh;
+    margin: 0;
 }
 
 #page {
     width: 100%;
+    min-height: 100%;
     display: grid;
     grid-template-columns: auto 800px auto;
-    grid-template-rows: 62px auto 320px;
+    grid-template-rows: 62px auto 80px;
     grid-template-areas:
         "header header header"
         "left content right"
@@ -81,6 +84,12 @@ body {
 
 #footer {
     grid-area: footer;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 12px;
+    line-height: 12px;
+    margin: 8px;
+    vertical-align: middle;
+    text-align: center;
 }
 
 #title {
@@ -101,6 +110,11 @@ body {
     vertical-align: middle;
     font-family: "Open Sans", sans-serif;
     text-transform: uppercase;
+}
+
+.content {
+    grid-area: content;
+    justify-self: stretch;
 }
 
 .content-item {
@@ -136,6 +150,10 @@ body {
     text-align: center;
     vertical-align: middle;
     line-height: 42px;
+}
+
+.katex-display code {
+    background-color: transparent !important;
 }
 
 .katex-display::after {

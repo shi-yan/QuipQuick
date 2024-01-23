@@ -55,6 +55,7 @@ struct Args {
 struct Post {
     date: DateTime<Utc>,
     description: String,
+    src: String,
     md: String,
     title: String,
     tags: Vec<String>,
@@ -86,6 +87,7 @@ impl Serialize for Post {
         .unwrap();
         map.serialize_entry("description", &self.description)
             .unwrap();
+        map.serialize_entry("src", &self.src).unwrap();
         map.serialize_entry("md", &self.md).unwrap();
         map.serialize_entry("title", &self.title).unwrap();
         map.serialize_entry("tags", &self.tags).unwrap();
@@ -248,9 +250,9 @@ fn render_markdown(
             }
         }
         Math(m) => {
-            output.push_str("<code class=\"language-math math-block\">");
+            output.push_str("<p><code class=\"language-math math-block\">");
             output.push_str(&m.value);
-            output.push_str("</code>");
+            output.push_str("</code></p>");
         }
         MdxFlowExpression(_) => {}
         Heading(h) => {
@@ -456,11 +458,12 @@ fn main() {
                     let mut images: Vec<String> = Vec::new();
                     let mut word_count: usize = 0;
                     render_markdown(&ast, &mut rendered_string, &mut images, &mut word_count);
-                    println!("word count: {}", word_count);
+                    //println!("word count: {} {}", word_count, folder);
 
                     let data = Post {
                         date: d,
                         description: description.to_string(),
+                        src: folder.to_string(),
                         md: rendered_string,
                         title: title.to_string(),
                         tags: tags,
