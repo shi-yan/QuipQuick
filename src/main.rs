@@ -841,7 +841,7 @@ fn main() {
         let output_path = format!("{}/index.html", target_folder);
 
         fs::write(output_path, index_rendered).unwrap();
-
+        fs::write(format!("{}/current_time.txt", target_folder).as_str(), format!("{}", current_time.format("%Y-%m-%d %H:%M:%S"))).unwrap();
         fs::copy("template/style.css", format!("{}/style.css", target_folder)).unwrap();
     }
 
