@@ -12,8 +12,8 @@ use markdown::mdast::Node::{
 use serde_json::json;
 use std::cmp::Ordering;
 use std::error::Error;
-use std::fs;
 use std::fs::File;
+use std::fs::{self, FileType};
 use std::io::ErrorKind;
 use std::path::Path;
 use std::path::PathBuf;
@@ -318,8 +318,10 @@ fn render_markdown(
                 .decode()
                 .unwrap();
 
-            if img.width() > 512 || img.height() > 512 {
-                let thumb = img.resize_to_fill(512, 512, image::imageops::FilterType::Lanczos3);
+            if img.width() > 768 || img.height() > 400 {
+                let shrink_ratio = (768.0/img.width() as f32).min( 400.0/img.height() as f32);
+
+                let thumb = img.resize((img.width() as f32 * shrink_ratio) as u32, (img.height() as f32 * shrink_ratio) as u32, image::imageops::FilterType::Lanczos3);
                 let thumb_path = format!("{}/{}/thumb_{}", target_folder, folder, i.url);
                 thumb.save(&thumb_path).unwrap();
                 output.push_str(
@@ -570,20 +572,25 @@ fn main() {
 
             for path in items {
                 if let Ok(item) = path {
-                    if !item.file_name().eq_ignore_ascii_case(".git") && !item.file_name().eq_ignore_ascii_case( "README.md") {
+                    if !item.file_name().eq_ignore_ascii_case(".git")
+                        && !item.file_name().eq_ignore_ascii_case("README.md")
+                    {
                         println!("removing {:?} {:?}", item.path(), item.file_name());
-                        fs::remove_dir_all(item.path()).unwrap();
+                        if let Ok(file_type) = item.file_type() {
+                            if file_type.is_dir() {
+                                fs::remove_dir_all(item.path()).unwrap();
+                            } else {
+                                fs::remove_file(item.path()).unwrap();
+                            }
+                        }
                     }
                 }
             }
-           
-        }else {
+        } else {
             fs::create_dir(&target_folder)
-            .expect(format!("Unable to create target folder: {}.", &target_folder).as_str());
-
+                .expect(format!("Unable to create target folder: {}.", &target_folder).as_str());
         }
 
-     
         let blog_title = if global.contains_key("title") {
             let mut title = String::new();
             if let Some(title_value) = global.get("title") {
