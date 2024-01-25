@@ -566,12 +566,24 @@ fn main() {
                 return;
             }
 
-            fs::remove_dir_all(&target_folder).unwrap();
-        }
+            let items = fs::read_dir(&target_folder).unwrap();
 
-        fs::create_dir(&target_folder)
+            for path in items {
+                if let Ok(item) = path {
+                    if !item.file_name().eq_ignore_ascii_case(".git") && !item.file_name().eq_ignore_ascii_case( "README.md") {
+                        println!("removing {:?} {:?}", item.path(), item.file_name());
+                        fs::remove_dir_all(item.path()).unwrap();
+                    }
+                }
+            }
+           
+        }else {
+            fs::create_dir(&target_folder)
             .expect(format!("Unable to create target folder: {}.", &target_folder).as_str());
 
+        }
+
+     
         let blog_title = if global.contains_key("title") {
             let mut title = String::new();
             if let Some(title_value) = global.get("title") {
