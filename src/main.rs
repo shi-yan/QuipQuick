@@ -83,6 +83,7 @@ struct Post {
     word_count: usize,
     repo: String,
     blog_title: String,
+    blog_url: String,
     quipquick_version: String,
     current_time: String,
     google_analytics: String,
@@ -90,6 +91,7 @@ struct Post {
     older_post: Option<(String, String)>,
     newer_post: Option<(String, String)>,
     discussion_url: Option<String>,
+    meta_img: Option<String>,
 }
 
 impl Serialize for Post {
@@ -119,6 +121,7 @@ impl Serialize for Post {
         map.serialize_entry("tags", &self.tags).unwrap();
         map.serialize_entry("word_count", &self.word_count).unwrap();
         map.serialize_entry("repo", &self.repo).unwrap();
+        map.serialize_entry("blog_url", &self.blog_url).unwrap();
         map.serialize_entry("blog_title", &self.blog_title).unwrap();
         map.serialize_entry("quipquick_version", &self.quipquick_version)
             .unwrap();
@@ -147,6 +150,10 @@ impl Serialize for Post {
                 .unwrap();
         }
 
+        if let Some(mi) = &self.meta_img {
+            map.serialize_entry("meta_img", mi).unwrap();
+        }
+
         map.end()
     }
 }
@@ -165,6 +172,13 @@ fn generate_google_analytics_id(id: &str) -> String {
     );
 }
 
+#[derive(Debug, Clone)]
+struct SelectedMetaImage {
+    url: String,
+    aspect_ratio: f32,
+    pixels: u32,
+}
+
 fn render_markdown(
     node: &Node,
     output: &mut String,
@@ -172,13 +186,22 @@ fn render_markdown(
     target_folder: &str,
     count: &mut usize,
     meta: &mut PostInfo,
+    selected_meta_image: &mut Option<SelectedMetaImage>,
 ) {
     match node {
         Paragraph(p) => {
             output.push_str("<p>");
 
             for n in node.children().unwrap() {
-                render_markdown(n, output, folder, target_folder, count, meta);
+                render_markdown(
+                    n,
+                    output,
+                    folder,
+                    target_folder,
+                    count,
+                    meta,
+                    selected_meta_image,
+                );
             }
 
             output.push_str("</p>");
@@ -189,14 +212,30 @@ fn render_markdown(
         }
         Root(r) => {
             for n in &r.children {
-                render_markdown(n, output, folder, target_folder, count, meta);
+                render_markdown(
+                    n,
+                    output,
+                    folder,
+                    target_folder,
+                    count,
+                    meta,
+                    selected_meta_image,
+                );
             }
         }
         BlockQuote(b) => {
             output.push_str("<blockquote>");
 
             for n in &b.children {
-                render_markdown(n, output, folder, target_folder, count, meta);
+                render_markdown(
+                    n,
+                    output,
+                    folder,
+                    target_folder,
+                    count,
+                    meta,
+                    selected_meta_image,
+                );
             }
 
             output.push_str("</blockquote>");
@@ -213,7 +252,15 @@ fn render_markdown(
             }
 
             for n in &l.children {
-                render_markdown(n, output, folder, target_folder, count, meta);
+                render_markdown(
+                    n,
+                    output,
+                    folder,
+                    target_folder,
+                    count,
+                    meta,
+                    selected_meta_image,
+                );
             }
 
             if l.ordered {
@@ -246,7 +293,15 @@ fn render_markdown(
         Emphasis(e) => {
             output.push_str("<em>");
             for n in &e.children {
-                render_markdown(n, output, folder, target_folder, count, meta);
+                render_markdown(
+                    n,
+                    output,
+                    folder,
+                    target_folder,
+                    count,
+                    meta,
+                    selected_meta_image,
+                );
             }
             output.push_str("</em>");
         }
@@ -266,7 +321,7 @@ fn render_markdown(
             if img.width() > 512 || img.height() > 512 {
                 let thumb = img.resize_to_fill(512, 512, image::imageops::FilterType::Lanczos3);
                 let thumb_path = format!("{}/{}/thumb_{}", target_folder, folder, i.url);
-                thumb.save(thumb_path).unwrap();
+                thumb.save(&thumb_path).unwrap();
                 output.push_str(
                     format!(
                         "<img class=\"img\" onclick=\"openImage(this)\" src=\"thumb_{}\" original_src=\"{}\" alt=\"{}\" />",
@@ -274,7 +329,26 @@ fn render_markdown(
                     )
                     .as_str(),
                 );
+
+                let pixels: u32 = thumb.width() * thumb.height();
+                let aspect_ratio = ((thumb.width() as f32 / thumb.height() as f32) - 1.0).abs();
+                if let Some(si) = selected_meta_image {
+                    if si.aspect_ratio > aspect_ratio || si.pixels < pixels {
+                        *si = SelectedMetaImage {
+                            pixels,
+                            aspect_ratio,
+                            url: format!("{}/thumb_{}", folder, i.url),
+                        };
+                    }
+                } else {
+                    *selected_meta_image = Some(SelectedMetaImage {
+                        pixels,
+                        aspect_ratio,
+                        url: format!("{}/thumb_{}", folder, i.url),
+                    });
+                }
             } else {
+                let img_path = format!("{}/{}", folder, i.url);
                 output.push_str(
                     format!(
                         "<img class=\"img\" onclick=\"openImage(this)\" src=\"{}\" alt=\"{}\" />",
@@ -282,6 +356,24 @@ fn render_markdown(
                     )
                     .as_str(),
                 );
+
+                let pixels: u32 = img.width() * img.height();
+                let aspect_ratio = ((img.width() as f32 / img.height() as f32) - 1.0).abs();
+                if let Some(si) = selected_meta_image {
+                    if si.aspect_ratio > aspect_ratio || si.pixels < pixels {
+                        *si = SelectedMetaImage {
+                            pixels,
+                            aspect_ratio,
+                            url: img_path,
+                        };
+                    }
+                } else {
+                    *selected_meta_image = Some(SelectedMetaImage {
+                        pixels,
+                        aspect_ratio,
+                        url: img_path,
+                    });
+                }
             }
 
             if i.alt.len() > 0 {
@@ -308,7 +400,15 @@ fn render_markdown(
                 *count += words_count::count(title).words;
             }
             for n in &l.children {
-                render_markdown(n, output, folder, target_folder, count, meta);
+                render_markdown(
+                    n,
+                    output,
+                    folder,
+                    target_folder,
+                    count,
+                    meta,
+                    selected_meta_image,
+                );
             }
             output.push_str("</a>");
         }
@@ -318,7 +418,15 @@ fn render_markdown(
         Strong(s) => {
             output.push_str("<strong>");
             for n in &s.children {
-                render_markdown(n, output, folder, target_folder, count, meta);
+                render_markdown(
+                    n,
+                    output,
+                    folder,
+                    target_folder,
+                    count,
+                    meta,
+                    selected_meta_image,
+                );
             }
             output.push_str("</strong>");
         }
@@ -348,7 +456,15 @@ fn render_markdown(
         Heading(h) => {
             output.push_str(format!("<h{} >", h.depth).as_str());
             for n in &h.children {
-                render_markdown(n, output, folder, target_folder, count, meta);
+                render_markdown(
+                    n,
+                    output,
+                    folder,
+                    target_folder,
+                    count,
+                    meta,
+                    selected_meta_image,
+                );
             }
             output.push_str(format!("</h{}>", h.depth).as_str());
         }
@@ -356,7 +472,15 @@ fn render_markdown(
         ListItem(li) => {
             output.push_str("<li>");
             for n in &li.children {
-                render_markdown(n, output, folder, target_folder, count, meta);
+                render_markdown(
+                    n,
+                    output,
+                    folder,
+                    target_folder,
+                    count,
+                    meta,
+                    selected_meta_image,
+                );
             }
             output.push_str("</li>");
         }
@@ -484,6 +608,18 @@ fn main() {
             String::new()
         };
 
+        let blog_url = if global.contains_key("url") {
+            let mut url = String::new();
+            if let Some(url_value) = global.get("url") {
+                if let toml::Value::String(url_str) = url_value {
+                    url = url_str.clone();
+                }
+            }
+            url
+        } else {
+            String::new()
+        };
+
         let google_analytics_id = if global.contains_key("google_analytics_id") {
             let mut google_analytics_id = String::new();
             if let Some(google_analytics_id_value) = global.get("google_analytics_id") {
@@ -504,6 +640,30 @@ fn main() {
                 }
             }
             Some(discussion_url)
+        } else {
+            None
+        };
+
+        let logo = if global.contains_key("logo") {
+            if let Some(logo_value) = global.get("logo") {
+                if let toml::Value::String(logo_path) = logo_value {
+                    if Path::new(logo_path).exists() {
+                        let img = ImageReader::open(logo_path).unwrap().decode().unwrap();
+                        let aspect_ratio = ((img.width() as f32 / img.height() as f32) - 1.0).abs();
+                        Some(SelectedMetaImage {
+                            pixels: img.width() * img.height(),
+                            aspect_ratio,
+                            url: logo_path.to_string(),
+                        })
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
         } else {
             None
         };
@@ -561,6 +721,8 @@ fn main() {
                     tags: vec![],
                     is_draft: false,
                 };
+                let mut selected_meta_image = logo.clone();
+
                 render_markdown(
                     &ast,
                     &mut rendered_string,
@@ -568,6 +730,7 @@ fn main() {
                     &target_folder,
                     &mut word_count,
                     &mut meta,
+                    &mut selected_meta_image,
                 );
                 if !meta.is_draft {
                     let d = meta.date.parse::<DateTimeUtc>().unwrap().0;
@@ -581,6 +744,7 @@ fn main() {
                         tags: meta.tags,
                         word_count: word_count,
                         blog_title: blog_title.clone(),
+                        blog_url: blog_url.clone(),
                         repo: repo.clone(),
                         quipquick_version: VERSION.to_string(),
                         current_time: format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
@@ -589,6 +753,11 @@ fn main() {
                         older_post: None,
                         newer_post: None,
                         discussion_url: discussion_url.clone(),
+                        meta_img: if let Some(si) = selected_meta_image {
+                            Some(si.url)
+                        } else {
+                            None
+                        },
                     };
                     post_list.push(data.clone());
                 }
@@ -630,15 +799,23 @@ fn main() {
         let index_template = fs::read_to_string("template/index.html")
             .expect("Should have been able to read the file");
 
-        let data = json!({
+        let mut data = json!({
             "posts": post_list,
             "repo": repo,
             "blog_title": blog_title,
             "blog_description": blog_description,
+            "blog_url":blog_url,
             "quipquick_version": VERSION,
             "current_time": format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
             "google_analytics": generate_google_analytics_id(&google_analytics_id)
         });
+
+        if let Some(logo) = logo {
+            fs::copy(&logo.url, format!("{}/{}", target_folder, logo.url)).unwrap();
+            data.as_object_mut()
+                .unwrap()
+                .insert("logo".to_string(), JsonValue::String(logo.url));
+        }
 
         let index_rendered = reg.render_template(&index_template, &data).unwrap();
 
