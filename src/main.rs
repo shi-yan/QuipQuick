@@ -89,6 +89,7 @@ struct Post {
     read_time: u32,
     older_post: Option<(String, String)>,
     newer_post: Option<(String, String)>,
+    discussion_url: Option<String>,
 }
 
 impl Serialize for Post {
@@ -138,6 +139,11 @@ impl Serialize for Post {
             map.serialize_entry("older_post_title", &older_post.0)
                 .unwrap();
             map.serialize_entry("older_post_folder", &older_post.1)
+                .unwrap();
+        }
+
+        if let Some(discussion_url) = &self.discussion_url {
+            map.serialize_entry("discussion_url", discussion_url)
                 .unwrap();
         }
 
@@ -490,6 +496,18 @@ fn main() {
             String::new()
         };
 
+        let discussion_url = if global.contains_key("discussion_url") {
+            let mut discussion_url = String::new();
+            if let Some(discussion_url_value) = global.get("discussion_url") {
+                if let toml::Value::String(discussion_url_str) = discussion_url_value {
+                    discussion_url = discussion_url_str.clone();
+                }
+            }
+            Some(discussion_url)
+        } else {
+            None
+        };
+
         let content = match global.get("content") {
             None => {
                 println!("Warning: No content detected.");
@@ -570,6 +588,7 @@ fn main() {
                         read_time: word_count as u32 / 238,
                         older_post: None,
                         newer_post: None,
+                        discussion_url: discussion_url.clone(),
                     };
                     post_list.push(data.clone());
                 }
@@ -588,15 +607,19 @@ fn main() {
 
         for index in 0..post_list.len() {
             if index > 0 {
-                post_list[index].newer_post =
-                    Some((post_list[index - 1].title.clone(), post_list[index - 1].src.clone()));
+                post_list[index].newer_post = Some((
+                    post_list[index - 1].title.clone(),
+                    post_list[index - 1].src.clone(),
+                ));
             }
 
             if index < post_list.len() - 1 {
-                post_list[index].older_post =
-                    Some((post_list[index + 1].title.clone(), post_list[index + 1].src.clone()));
+                post_list[index].older_post = Some((
+                    post_list[index + 1].title.clone(),
+                    post_list[index + 1].src.clone(),
+                ));
             }
-            
+
             let rendered = reg.render_template(&template, &post_list[index]).unwrap();
 
             let output_path = format!("{}/{}/index.html", target_folder, &post_list[index].src);
