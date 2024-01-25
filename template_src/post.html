@@ -25,8 +25,8 @@
 
 <body>
     <div id="page">
-        <div id="header"><a class="icon" href="/">{{blog_title}}</a> <a class="icon" href="{{repo}}"><svg xmlns="http://www.w3.org/2000/svg"
-                    height="32" width="32" fill="#dadadb"
+        <div id="header"><a class="icon" href="/">{{blog_title}}</a> <a class="icon" href="{{repo}}"><svg
+                    xmlns="http://www.w3.org/2000/svg" height="32" width="32" fill="#dadadb"
                     viewBox="0 0 480 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
                     <path
                         d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z" />
@@ -47,13 +47,58 @@
                 {{#each tags}}
                 #{{this}},
                 {{/each}}
-                <svg xmlns="http://www.w3.org/2000/svg" style="margin-left:16px;" height="12" width="11" fill="#dadadb" viewBox="0 0 384 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M320 464c8.8 0 16-7.2 16-16V160H256c-17.7 0-32-14.3-32-32V48H64c-8.8 0-16 7.2-16 16V448c0 8.8 7.2 16 16 16H320zM0 64C0 28.7 28.7 0 64 0H229.5c17 0 33.3 6.7 45.3 18.7l90.5 90.5c12 12 18.7 28.3 18.7 45.3V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V64z"/></svg>
-                        {{word_count}} Words
-                <svg xmlns="http://www.w3.org/2000/svg" style="margin-left:16px;" height="12" width="11" fill="#dadadb"  viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M464 256A208 208 0 1 1 48 256a208 208 0 1 1 416 0zM0 256a256 256 0 1 0 512 0A256 256 0 1 0 0 256zM232 120V256c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2V120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></svg>
-                        {{read_time}} Mins
+                <svg xmlns="http://www.w3.org/2000/svg" style="margin-left:16px;" height="12" width="11" fill="#dadadb"
+                    viewBox="0 0 384 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+                    <path
+                        d="M320 464c8.8 0 16-7.2 16-16V160H256c-17.7 0-32-14.3-32-32V48H64c-8.8 0-16 7.2-16 16V448c0 8.8 7.2 16 16 16H320zM0 64C0 28.7 28.7 0 64 0H229.5c17 0 33.3 6.7 45.3 18.7l90.5 90.5c12 12 18.7 28.3 18.7 45.3V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V64z" />
+                </svg>
+                {{word_count}} Words
+                <svg xmlns="http://www.w3.org/2000/svg" style="margin-left:16px;" height="12" width="11" fill="#dadadb"
+                    viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+                    <path
+                        d="M464 256A208 208 0 1 1 48 256a208 208 0 1 1 416 0zM0 256a256 256 0 1 0 512 0A256 256 0 1 0 0 256zM232 120V256c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2V120c0-13.3-10.7-24-24-24s-24 10.7-24 24z" />
+                </svg>
+                {{read_time}} Mins
             </div>
             <article id="post">{{{md}}}</article>
-            <a href="" target="_blank" class="comment"><svg style="margin-right:10px;vertical-align: middle;"
+            <div class="older_newer_link_section">
+                {{#if older_post_title}}
+                <div class="older_newer_link_left">
+                    <p>
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" height="12" width="11" fill="#dadadb"
+                            viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+                            <path
+                                d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
+                        </svg>
+                        PREV POST
+
+
+                    </p>
+                    <p>
+                        <a class="older_newer_link" href="/{{older_post_folder}}">{{older_post_title}}</a>
+                    </p>
+                </div>
+                {{/if}}
+
+                {{#if newer_post_title}}
+                <div class="older_newer_link_right">
+                    <p>
+                        NEXT POST
+                        <svg xmlns="http://www.w3.org/2000/svg" height="12" width="11" fill="#dadadb"
+                            viewBox="0 0 448 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
+                            <path
+                                d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z" />
+                        </svg>
+                    </p>
+                    <p>
+                        <a class="older_newer_link" href="/{{newer_post_folder}}">{{newer_post_title}}</a>
+                    </p>
+                </div>
+                {{/if}}
+            </div>
+            <a href="{{github_discussion_link}}" target="_blank" class="comment"><svg style="margin-right:10px;vertical-align: middle;"
                     xmlns="http://www.w3.org/2000/svg" height="32" width="32" fill="#dadadb"
                     viewBox="0 0 480 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.-->
                     <path
@@ -64,10 +109,8 @@
         <div id="footer">Generated by QuipQuick @ {{current_time}}</div>
         <!-- The Modal -->
         <div id="img-modal" class="modal">
-
             <!-- The Close Button -->
             <span class="close" id="img-close">&times;</span>
-
             <!-- Modal Content (The Image) -->
             <img class="modal-content" id="img01">
 

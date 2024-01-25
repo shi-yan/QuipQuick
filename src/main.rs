@@ -87,6 +87,8 @@ struct Post {
     current_time: String,
     google_analytics: String,
     read_time: u32,
+    older_post: Option<(String, String)>,
+    newer_post: Option<(String, String)>,
 }
 
 impl Serialize for Post {
@@ -124,6 +126,21 @@ impl Serialize for Post {
         map.serialize_entry("google_analytics", &self.google_analytics)
             .unwrap();
         map.serialize_entry("read_time", &self.read_time).unwrap();
+
+        if let Some(newer_post) = &self.newer_post {
+            map.serialize_entry("newer_post_title", &newer_post.0)
+                .unwrap();
+            map.serialize_entry("newer_post_folder", &newer_post.1)
+                .unwrap();
+        }
+
+        if let Some(older_post) = &self.older_post {
+            map.serialize_entry("older_post_title", &older_post.0)
+                .unwrap();
+            map.serialize_entry("older_post_folder", &older_post.1)
+                .unwrap();
+        }
+
         map.end()
     }
 }
@@ -551,14 +568,10 @@ fn main() {
                         current_time: format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
                         google_analytics: generate_google_analytics_id(&google_analytics_id),
                         read_time: word_count as u32 / 238,
+                        older_post: None,
+                        newer_post: None,
                     };
                     post_list.push(data.clone());
-
-                    let rendered = reg.render_template(&template, &data).unwrap();
-
-                    let output_path = format!("{}/{}/index.html", target_folder, folder);
-
-                    fs::write(output_path, rendered).unwrap();
                 }
             }
         }
@@ -572,6 +585,24 @@ fn main() {
                 return Ordering::Less;
             }
         });
+
+        for index in 0..post_list.len() {
+            if index > 0 {
+                post_list[index].newer_post =
+                    Some((post_list[index - 1].title.clone(), post_list[index - 1].src.clone()));
+            }
+
+            if index < post_list.len() - 1 {
+                post_list[index].older_post =
+                    Some((post_list[index + 1].title.clone(), post_list[index + 1].src.clone()));
+            }
+            
+            let rendered = reg.render_template(&template, &post_list[index]).unwrap();
+
+            let output_path = format!("{}/{}/index.html", target_folder, &post_list[index].src);
+
+            fs::write(output_path, rendered).unwrap();
+        }
 
         let index_template = fs::read_to_string("template/index.html")
             .expect("Should have been able to read the file");
