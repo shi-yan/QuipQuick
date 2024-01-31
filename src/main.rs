@@ -450,7 +450,7 @@ fn render_markdown(
             }
         }
         Math(m) => {
-            output.push_str("<p><code class=\"language-math math-block\">");
+            output.push_str("<p class=\"katex-display-counter\"><code class=\"language-math math-block\">");
             output.push_str(&m.value);
             output.push_str("</code></p>");
         }

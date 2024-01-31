@@ -7,7 +7,7 @@ body {
     background-color: #1d1e20;
     color: rgb(218, 218, 219);
     overflow-x: hidden;
-    counter-reset: equnum;
+    counter-reset: katexEqnNo mmlEqnNo;
     height: 100vh;
     margin: 0;
 }
@@ -150,21 +150,25 @@ body {
     font-size: 11px;
 }
 
-.katex-display {
-    display: inline-block;
-    text-align: center;
-    vertical-align: middle;
+.katex-display-counter {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
     line-height: 42px;
 }
 
-.katex-display code {
+.katex-display-counter code {
     background-color: transparent !important;
+    display: inline-block;
+    flex-grow: 1;
 }
 
-.katex-display::after {
-    counter-increment: eqnum;
-    content: "(" counter(eqnum) ")";
+.katex-display-counter::after {
+    counter-increment: katexEqnNo;
+    content: "(" counter(katexEqnNo) ")";
     float: right;
+    vertical-align: middle;
 }
 
 article {

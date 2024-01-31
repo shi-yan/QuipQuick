@@ -171,9 +171,9 @@
             const macros = {};
             const mathElementsBlock = document.getElementsByClassName("math-block");
             for (let element of mathElementsBlock) {
-                element.parentElement.classList.toggle("katex-display")
                 katex.render(element.textContent, element, {
                     throwOnError: false,
+                    displayMode: true,
                     macros
                 });
             }
