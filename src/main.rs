@@ -129,7 +129,8 @@ impl Serialize for Post {
             .unwrap();
         map.serialize_entry("google_analytics", &self.google_analytics)
             .unwrap();
-        map.serialize_entry("read_time", &self.read_time).unwrap();
+        let read_time_str = if self.read_time > 1 { format!("{} Mins", &self.read_time) } else { format!("{} Min", &self.read_time) };
+        map.serialize_entry("read_time", &read_time_str).unwrap();
 
         if let Some(newer_post) = &self.newer_post {
             map.serialize_entry("newer_post_title", &newer_post.0)
