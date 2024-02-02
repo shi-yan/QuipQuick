@@ -56,7 +56,21 @@ body {
     color: #dadadb;
     text-decoration: none;
     vertical-align: middle;
+    cursor: pointer;
+}
 
+.icon:hover {
+    color: #876fd6;
+}
+
+.blog-title {
+    text-decoration: none;
+    color: #dadadb;
+    cursor: pointer;
+}
+
+.blog-title:hover {
+    color: #876fd6;
 }
 
 .link {
