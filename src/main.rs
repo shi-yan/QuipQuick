@@ -9,7 +9,7 @@ use markdown::mdast::Node::{
     MdxFlowExpression, MdxJsxFlowElement, MdxJsxTextElement, MdxTextExpression, MdxjsEsm,
     Paragraph, Root, Strong, Text, ThematicBreak, Toml, Yaml,
 };
-use serde_json::json;
+use serde_json::{json, Map};
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fs::File;
@@ -27,14 +27,15 @@ use chrono::{DateTime, Datelike};
 use fs_extra::dir::CopyOptions;
 use fs_extra::TransitProcess;
 use handlebars::JsonValue;
-use handlebars::ScopedJson;
 use image::io::Reader as ImageReader;
 use markdown::{Constructs, Options, ParseOptions};
-use rust_embed::{EmbeddedFile, RustEmbed};
+use rust_embed::RustEmbed;
 use serde::ser::{Serialize, SerializeMap, SerializeSeq, Serializer};
 use serde::Deserialize;
 use std::cmp;
-use words_count::WordsCount;
+use std::collections::HashMap;
+extern crate slug;
+use slug::slugify;
 
 fn default_as_false() -> bool {
     false
@@ -74,13 +75,33 @@ struct Args {
 }
 
 #[derive(Debug, Clone)]
+struct Tag {
+    slug: String,
+    tag: String,
+}
+
+impl Serialize for Tag {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map = serializer.serialize_map(Some(6)).unwrap();
+
+        map.serialize_entry("slug", &self.slug).unwrap();
+        map.serialize_entry("tag", &self.tag).unwrap();
+
+        map.end()
+    }
+}
+
+#[derive(Debug, Clone)]
 struct Post {
     date: DateTime<Utc>,
     description: String,
     src: String,
     md: String,
     title: String,
-    tags: Vec<String>,
+    tags: Vec<Tag>,
     word_count: usize,
     repo: String,
     blog_title: String,
@@ -105,7 +126,7 @@ impl Serialize for Post {
         map.serialize_entry(
             "date",
             format!(
-                "{}-{:0width$}-{}",
+                "{}-{:0width$}-{:0width$}",
                 self.date.year(),
                 self.date.month(),
                 self.date.day(),
@@ -119,7 +140,9 @@ impl Serialize for Post {
         map.serialize_entry("src", &self.src).unwrap();
         map.serialize_entry("md", &self.md).unwrap();
         map.serialize_entry("title", &self.title).unwrap();
+
         map.serialize_entry("tags", &self.tags).unwrap();
+
         map.serialize_entry("word_count", &self.word_count).unwrap();
         map.serialize_entry("repo", &self.repo).unwrap();
         map.serialize_entry("blog_url", &self.blog_url).unwrap();
@@ -280,7 +303,7 @@ fn render_markdown(
         }
         Yaml(c) => {
             *meta = serde_yaml::from_str(&c.value).unwrap();
-            println!("{:?}", meta);
+            //println!("{:?}", meta);
         }
         Break(_) => {
             output.push_str("<br />");
@@ -719,6 +742,11 @@ fn main() {
             for c in content {
                 let folder = c.as_str().unwrap();
 
+                if folder == "tags" {
+                    println!("There shouldn't be a content folder named tags");
+                    return;
+                }
+
                 let target_folder_exists =
                     Path::new(format!("{}/{}", target_folder, folder).as_str()).exists();
 
@@ -765,6 +793,13 @@ fn main() {
                 );
                 if !meta.is_draft {
                     let d = meta.date.parse::<DateTimeUtc>().unwrap().0;
+                    let mut tags: Vec<Tag> = Vec::new();
+                    for t in &meta.tags {
+                        tags.push(Tag {
+                            slug: slugify(t),
+                            tag: t.to_lowercase(),
+                        });
+                    }
 
                     let data = Post {
                         date: d,
@@ -772,7 +807,7 @@ fn main() {
                         src: folder.to_string(),
                         md: rendered_string,
                         title: meta.title,
-                        tags: meta.tags,
+                        tags: tags,
                         word_count: word_count,
                         blog_title: blog_title.clone(),
                         blog_url: blog_url.clone(),
@@ -807,7 +842,9 @@ fn main() {
 
         const PAGE_ITEM_COUNT: u32 = 5;
 
-        let page_size = (post_list.len() as f32 / PAGE_ITEM_COUNT as f32).ceil() as u32;
+        let page_size: u32 = (post_list.len() as f32 / PAGE_ITEM_COUNT as f32).ceil() as u32;
+
+        let mut tags: HashMap<String, (String, Vec<u32>)> = HashMap::new();
 
         for index in 0..post_list.len() {
             if index > 0 {
@@ -824,11 +861,32 @@ fn main() {
                 ));
             }
 
+            println!(
+                "Generating article {} {}",
+                format!(
+                    "{}-{:0width$}-{:0width$}",
+                    &post_list[index].date.year(),
+                    &post_list[index].date.month(),
+                    &post_list[index].date.day(),
+                    width = 2
+                )
+                .as_str(),
+                &post_list[index].title
+            );
+
             let rendered = reg.render_template(&template, &post_list[index]).unwrap();
 
             let output_path = format!("{}/{}/index.html", target_folder, &post_list[index].src);
 
             fs::write(output_path, rendered).unwrap();
+
+            for t in &post_list[index].tags {
+                if tags.contains_key(&t.slug) {
+                    tags.get_mut(&t.slug).unwrap().1.push(index as u32);
+                } else {
+                    tags.insert(t.slug.clone(), (t.tag.clone(), vec![index as u32]));
+                }
+            }
         }
 
         let index_template = fs::read_to_string("template/index.html")
@@ -864,17 +922,21 @@ fn main() {
             }
 
             if index > 0 {
-                let prev_path = if index-1 == 0 {
-                   String::from( "/index.html")
+                let prev_path = if index - 1 == 0 {
+                    String::from("/index.html")
                 } else {
-                    format!("/index{}.html", index )
+                    format!("/index{}.html", index)
                 };
-                data.as_object_mut().unwrap().insert("prev".to_string(), JsonValue::String(prev_path) );
+                data.as_object_mut()
+                    .unwrap()
+                    .insert("prev".to_string(), JsonValue::String(prev_path));
             }
 
-            if index < page_size-1 {
-                let next_path=format!("/index{}.html", index +2);
-                data.as_object_mut().unwrap().insert("next".to_string(), JsonValue::String(next_path) );
+            if index < page_size - 1 {
+                let next_path = format!("/index{}.html", index + 2);
+                data.as_object_mut()
+                    .unwrap()
+                    .insert("next".to_string(), JsonValue::String(next_path));
             }
 
             let index_rendered = reg.render_template(&index_template, &data).unwrap();
@@ -887,6 +949,89 @@ fn main() {
 
             fs::write(output_path, index_rendered).unwrap();
         }
+
+        for t in tags {
+            let folder = t.0.as_str();
+
+            let target_folder_exists =
+                Path::new(format!("{}/tags/{}", target_folder, folder).as_str()).exists();
+
+            if !target_folder_exists {
+                fs::create_dir_all(format!("{}/tags/{}", target_folder, folder).as_str())
+                    .expect(format!("Unable to create tag folder: {}.", &folder).as_str());
+            }
+
+            let tag_page_size: u32 = (t.1 .1.len() as f32 / PAGE_ITEM_COUNT as f32).ceil() as u32;
+
+            let mut tag_post_list: Vec<Post> = Vec::new();
+
+            for tid in &t.1 .1 {
+                tag_post_list.push(post_list[*tid as usize].clone());
+            }
+
+            for index in 0..tag_page_size {
+                let mut pages = Vec::new();
+
+                for pindex in 0..tag_page_size {
+                    pages.push(json!({"id":pindex+1,"current":index == pindex, "link":if pindex ==0 {String::from("/index.html")} else {format!("/index{}.html",pindex+1)}}));
+                }
+
+                let page_range = (index * PAGE_ITEM_COUNT) as usize
+                    ..cmp::min((index + 1) * PAGE_ITEM_COUNT, t.1 .1.len() as u32) as usize;
+
+                let mut data = json!({
+                    "posts": tag_post_list[page_range],
+                    "repo": repo,
+                    "pages": pages,
+                    "blog_title": blog_title,
+                    "blog_description": blog_description,
+                    "blog_url":blog_url,
+                    "quipquick_version": VERSION,
+                    "current_time": format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
+                    "google_analytics": generate_google_analytics_id(&google_analytics_id)
+                });
+
+                if let Some(logo) = &logo {
+                    fs::copy(&logo.url, format!("{}/{}", target_folder, logo.url)).unwrap();
+                    data.as_object_mut()
+                        .unwrap()
+                        .insert("logo".to_string(), JsonValue::String(logo.url.clone()));
+                }
+
+                if index > 0 {
+                    let prev_path = if index - 1 == 0 {
+                        format!("/tags/{}/index.html", t.0)
+                    } else {
+                        format!("/tags/{}/index{}.html", t.0, index)
+                    };
+                    data.as_object_mut()
+                        .unwrap()
+                        .insert("prev".to_string(), JsonValue::String(prev_path));
+                }
+
+                if index < tag_page_size - 1 {
+                    let next_path = format!("/tags/{}/index{}.html", t.0, index + 2);
+                    data.as_object_mut()
+                        .unwrap()
+                        .insert("next".to_string(), JsonValue::String(next_path));
+                }
+
+                data.as_object_mut()
+                    .unwrap()
+                    .insert("page_tag".to_string(), JsonValue::String(t.1 .0.clone()));
+
+                let index_rendered = reg.render_template(&index_template, &data).unwrap();
+
+                let output_path = if index == 0 {
+                    format!("{}/tags/{}/index.html", target_folder, folder)
+                } else {
+                    format!("{}/tags/{}/index{}.html", target_folder, folder, index + 1)
+                };
+
+                fs::write(output_path, index_rendered).unwrap();
+            }
+        }
+
         fs::write(
             format!("{}/current_time.txt", target_folder).as_str(),
             format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),

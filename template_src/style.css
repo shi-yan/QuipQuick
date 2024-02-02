@@ -116,6 +116,21 @@ body {
     line-height: 12px;
 }
 
+.meta {
+    text-decoration: none;
+    color: #dadadb;
+}
+
+.tag {
+    text-decoration: none;
+    color: #dadadb;
+    cursor: pointer;
+}
+
+.tag:hover {
+    color: #876fd6;
+}
+
 .content {
     grid-area: content;
     justify-self: stretch;
@@ -443,6 +458,13 @@ code {
 
 .page-link.current {
     background-color: #3e3e43;
+}
+
+.page-tag {
+    font-family: "Open Sans", sans-serif;
+    color: #dadadb;
+    font-style: normal;
+    text-transform: uppercase;
 }
 
 ::-webkit-scrollbar-thumb {
