@@ -33,6 +33,7 @@ use markdown::{Constructs, Options, ParseOptions};
 use rust_embed::{EmbeddedFile, RustEmbed};
 use serde::ser::{Serialize, SerializeMap, SerializeSeq, Serializer};
 use serde::Deserialize;
+use std::cmp;
 use words_count::WordsCount;
 
 fn default_as_false() -> bool {
@@ -129,7 +130,11 @@ impl Serialize for Post {
             .unwrap();
         map.serialize_entry("google_analytics", &self.google_analytics)
             .unwrap();
-        let read_time_str = if self.read_time > 1 { format!("{} Mins", &self.read_time) } else { format!("{} Min", &self.read_time) };
+        let read_time_str = if self.read_time > 1 {
+            format!("{} Mins", &self.read_time)
+        } else {
+            format!("{} Min", &self.read_time)
+        };
         map.serialize_entry("read_time", &read_time_str).unwrap();
 
         if let Some(newer_post) = &self.newer_post {
@@ -320,9 +325,13 @@ fn render_markdown(
                 .unwrap();
 
             if img.width() > 768 || img.height() > 400 {
-                let shrink_ratio = (768.0/img.width() as f32).min( 400.0/img.height() as f32);
+                let shrink_ratio = (768.0 / img.width() as f32).min(400.0 / img.height() as f32);
 
-                let thumb = img.resize((img.width() as f32 * shrink_ratio) as u32, (img.height() as f32 * shrink_ratio) as u32, image::imageops::FilterType::Lanczos3);
+                let thumb = img.resize(
+                    (img.width() as f32 * shrink_ratio) as u32,
+                    (img.height() as f32 * shrink_ratio) as u32,
+                    image::imageops::FilterType::Lanczos3,
+                );
                 let thumb_path = format!("{}/{}/thumb_{}", target_folder, folder, i.url);
                 thumb.save(&thumb_path).unwrap();
                 output.push_str(
@@ -451,7 +460,9 @@ fn render_markdown(
             }
         }
         Math(m) => {
-            output.push_str("<p class=\"katex-display-counter\"><code class=\"language-math math-block\">");
+            output.push_str(
+                "<p class=\"katex-display-counter\"><code class=\"language-math math-block\">",
+            );
             output.push_str(&m.value);
             output.push_str("</code></p>");
         }
@@ -794,6 +805,10 @@ fn main() {
             }
         });
 
+        const PAGE_ITEM_COUNT: u32 = 5;
+
+        let page_size = (post_list.len() as f32 / PAGE_ITEM_COUNT as f32).ceil() as u32;
+
         for index in 0..post_list.len() {
             if index > 0 {
                 post_list[index].newer_post = Some((
@@ -819,30 +834,64 @@ fn main() {
         let index_template = fs::read_to_string("template/index.html")
             .expect("Should have been able to read the file");
 
-        let mut data = json!({
-            "posts": post_list,
-            "repo": repo,
-            "blog_title": blog_title,
-            "blog_description": blog_description,
-            "blog_url":blog_url,
-            "quipquick_version": VERSION,
-            "current_time": format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
-            "google_analytics": generate_google_analytics_id(&google_analytics_id)
-        });
+        for index in 0..page_size {
+            let mut pages = Vec::new();
 
-        if let Some(logo) = logo {
-            fs::copy(&logo.url, format!("{}/{}", target_folder, logo.url)).unwrap();
-            data.as_object_mut()
-                .unwrap()
-                .insert("logo".to_string(), JsonValue::String(logo.url));
+            for pindex in 0..page_size {
+                pages.push(json!({"id":pindex+1,"current":index == pindex, "link":if pindex ==0 {String::from("/index.html")} else {format!("/index{}.html",pindex+1)}}));
+            }
+
+            let page_range = (index * PAGE_ITEM_COUNT) as usize
+                ..cmp::min((index + 1) * PAGE_ITEM_COUNT, post_list.len() as u32) as usize;
+
+            let mut data = json!({
+                "posts": post_list[page_range],
+                "repo": repo,
+                "pages": pages,
+                "blog_title": blog_title,
+                "blog_description": blog_description,
+                "blog_url":blog_url,
+                "quipquick_version": VERSION,
+                "current_time": format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
+                "google_analytics": generate_google_analytics_id(&google_analytics_id)
+            });
+
+            if let Some(logo) = &logo {
+                fs::copy(&logo.url, format!("{}/{}", target_folder, logo.url)).unwrap();
+                data.as_object_mut()
+                    .unwrap()
+                    .insert("logo".to_string(), JsonValue::String(logo.url.clone()));
+            }
+
+            if index > 0 {
+                let prev_path = if index-1 == 0 {
+                   String::from( "/index.html")
+                } else {
+                    format!("/index{}.html", index )
+                };
+                data.as_object_mut().unwrap().insert("prev".to_string(), JsonValue::String(prev_path) );
+            }
+
+            if index < page_size-1 {
+                let next_path=format!("/index{}.html", index +2);
+                data.as_object_mut().unwrap().insert("next".to_string(), JsonValue::String(next_path) );
+            }
+
+            let index_rendered = reg.render_template(&index_template, &data).unwrap();
+
+            let output_path = if index == 0 {
+                format!("{}/index.html", target_folder)
+            } else {
+                format!("{}/index{}.html", target_folder, index + 1)
+            };
+
+            fs::write(output_path, index_rendered).unwrap();
         }
-
-        let index_rendered = reg.render_template(&index_template, &data).unwrap();
-
-        let output_path = format!("{}/index.html", target_folder);
-
-        fs::write(output_path, index_rendered).unwrap();
-        fs::write(format!("{}/current_time.txt", target_folder).as_str(), format!("{}", current_time.format("%Y-%m-%d %H:%M:%S"))).unwrap();
+        fs::write(
+            format!("{}/current_time.txt", target_folder).as_str(),
+            format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
+        )
+        .unwrap();
         fs::copy("template/style.css", format!("{}/style.css", target_folder)).unwrap();
     }
 

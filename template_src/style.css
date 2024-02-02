@@ -63,7 +63,7 @@ body {
     text-decoration: none;
     cursor: pointer;
     font-style: italic;
-    color: rgb(186, 186, 186);
+    color: #876fd6;
 }
 
 .video {
@@ -135,7 +135,7 @@ body {
 
 .content-item a {
     text-decoration: none;
-    color: #876fd6;
+    color: #dadadb;
 }
 
 .content-item-description {
@@ -417,6 +417,32 @@ code {
     border-left-style: solid;
     border-left-width: 2px;
     border-left-color: #dadadb;
+}
+
+.pages {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.page-link {
+    text-decoration: none;
+    padding: 4px;
+    border-radius: 8px;
+    margin: 4px;
+    background-color: #2e2e33;
+    font-family: "Open Sans", sans-serif;
+    color: #dadadb;
+    min-width: 18px;
+    text-align: center;
+}
+
+.page-link:hover {
+    background-color: #3e3e43;
+}
+
+.page-link.current {
+    background-color: #3e3e43;
 }
 
 ::-webkit-scrollbar-thumb {
