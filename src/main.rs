@@ -2,6 +2,7 @@ use clap::Parser;
 use dateparser::DateTimeUtc;
 use handlebars::RenderError;
 use handlebars::{handlebars_helper, Handlebars, JsonRender};
+use image::EncodableLayout;
 use markdown::mdast::Node;
 use markdown::mdast::Node::{
     BlockQuote, Break, Code, Delete, Emphasis, FootnoteDefinition, FootnoteReference, Heading,
@@ -33,7 +34,7 @@ use rust_embed::RustEmbed;
 use serde::ser::{Serialize, SerializeMap, SerializeSeq, Serializer};
 use serde::Deserialize;
 use std::cmp;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 extern crate slug;
 use slug::slugify;
 
@@ -114,6 +115,7 @@ struct Post {
     newer_post: Option<(String, String)>,
     discussion_url: Option<String>,
     meta_img: Option<String>,
+    langs: HashSet<String>
 }
 
 impl Serialize for Post {
@@ -183,6 +185,10 @@ impl Serialize for Post {
             map.serialize_entry("meta_img", mi).unwrap();
         }
 
+        if self.langs.len() > 0 {
+            map.serialize_entry("langs", &self.langs).unwrap();
+        }
+
         map.end()
     }
 }
@@ -215,6 +221,7 @@ fn render_markdown(
     target_folder: &str,
     count: &mut usize,
     meta: &mut PostInfo,
+    langs: &mut HashSet<String>,
     selected_meta_image: &mut Option<SelectedMetaImage>,
 ) {
     match node {
@@ -229,6 +236,7 @@ fn render_markdown(
                     target_folder,
                     count,
                     meta,
+                    langs,
                     selected_meta_image,
                 );
             }
@@ -248,6 +256,7 @@ fn render_markdown(
                     target_folder,
                     count,
                     meta,
+                    langs,
                     selected_meta_image,
                 );
             }
@@ -263,6 +272,7 @@ fn render_markdown(
                     target_folder,
                     count,
                     meta,
+                    langs,
                     selected_meta_image,
                 );
             }
@@ -288,6 +298,7 @@ fn render_markdown(
                     target_folder,
                     count,
                     meta,
+                    langs,
                     selected_meta_image,
                 );
             }
@@ -329,6 +340,7 @@ fn render_markdown(
                     target_folder,
                     count,
                     meta,
+                    langs,
                     selected_meta_image,
                 );
             }
@@ -355,6 +367,8 @@ fn render_markdown(
                     (img.height() as f32 * shrink_ratio) as u32,
                     image::imageops::FilterType::Lanczos3,
                 );
+                //let hash = thumbhash::rgba_to_thumb_hash(img.width() as usize, img.height() as usize,   thumb.as_rgba8().unwrap().as_bytes());
+
                 let thumb_path = format!("{}/{}/thumb_{}", target_folder, folder, i.url);
                 thumb.save(&thumb_path).unwrap();
                 output.push_str(
@@ -442,6 +456,7 @@ fn render_markdown(
                     target_folder,
                     count,
                     meta,
+                    langs,
                     selected_meta_image,
                 );
             }
@@ -460,6 +475,7 @@ fn render_markdown(
                     target_folder,
                     count,
                     meta,
+                    langs,
                     selected_meta_image,
                 );
             }
@@ -475,6 +491,7 @@ fn render_markdown(
                     );
                     output.push_str(&c.value);
                     output.push_str("</code></pre>");
+                    langs.insert(lang.clone());
                 }
             } else {
                 output.push_str("<pre><code>");
@@ -500,6 +517,7 @@ fn render_markdown(
                     target_folder,
                     count,
                     meta,
+                    langs,
                     selected_meta_image,
                 );
             }
@@ -516,6 +534,7 @@ fn render_markdown(
                     target_folder,
                     count,
                     meta,
+                    langs,
                     selected_meta_image,
                 );
             }
@@ -781,6 +800,7 @@ fn main() {
                     is_draft: false,
                 };
                 let mut selected_meta_image = logo.clone();
+                let mut langs: HashSet<String> = HashSet::new();
 
                 render_markdown(
                     &ast,
@@ -789,6 +809,7 @@ fn main() {
                     &target_folder,
                     &mut word_count,
                     &mut meta,
+                    &mut langs,
                     &mut selected_meta_image,
                 );
                 if !meta.is_draft {
@@ -824,6 +845,7 @@ fn main() {
                         } else {
                             None
                         },
+                        langs: langs
                     };
                     post_list.push(data.clone());
                 }

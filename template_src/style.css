@@ -13,10 +13,11 @@ body {
 }
 
 #page {
+    position:relative;
     width: 100%;
     min-height: 100%;
     display: grid;
-    grid-template-columns: auto 800px auto;
+    grid-template-columns: 1fr fit-content(min(100%, 800px)) 1fr;
     grid-template-rows: 62px auto 80px;
     grid-template-areas:
         "header header header"
@@ -183,7 +184,8 @@ body {
     display: flex;
     flex-direction: row;
     align-items: center;
-    width: 100%;
+    max-width: calc(100% - 32px);
+    overflow: hidden;
     line-height: 42px;
 }
 
