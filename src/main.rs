@@ -940,7 +940,9 @@ fn main() {
         }
 
         let rss_image = ImageBuilder::default()
-            .link(format!("{}/{}", &blog_url, meta_image))
+            .url(format!("{}/{}", &blog_url, meta_image))
+            .title(blog_title.clone())
+            .link(blog_url.clone())
             .build();
 
         let channel = ChannelBuilder::default()
