@@ -120,7 +120,7 @@
             async function setBuildTime() {
                 let response = await fetch("/current_time.txt");
                 let currentTime = await response.text();
-                document.getElementById('footer').innerText +=' ' + currentTime;
+                document.getElementById('footer').innerHTML +=' ' + currentTime;
             }
             setBuildTime();
         </script>

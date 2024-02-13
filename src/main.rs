@@ -944,7 +944,7 @@ fn main() {
             .title(blog_title.clone())
             .link(blog_url.clone())
             .build();
-
+        
         let channel = ChannelBuilder::default()
             .title(blog_title.clone())
             .link(blog_url.clone())
