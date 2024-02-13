@@ -3,33 +3,33 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <!-- Primary Meta Tags -->
     <title>{{blog_title}}: {{title}}</title>
-    <meta name="title" content="{{title}}">
-    <meta name="description" content="{{description}}">
+    <meta name="title" content="{{title}}" />
+    <meta name="description" content="{{description}}" />
   
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{blog_url}}/{{src}}">
-    <meta property="og:title" content="{{title}}">
-    <meta property="og:description" content="{{description}}">
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{{blog_url}}/{{src}}" />
+    <meta property="og:title" content="{{title}}" />
+    <meta property="og:description" content="{{description}}" />
     {{#if meta_img}}
-    <meta property="og:image" content="{{blog_url}}/{{meta_img}}">
+    <meta property="og:image" content="{{blog_url}}/{{meta_img}}" />
     {{/if}}
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{blog_url}}/{{src}}">
-    <meta property="twitter:title" content="{{title}}">
-    <meta property="twitter:description" content="{{description}}">
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="{{blog_url}}/{{src}}" />
+    <meta property="twitter:title" content="{{title}}" />
+    <meta property="twitter:description" content="{{description}}" />
     {{#if meta_img}}
-    <meta property="twitter:image" content="{{blog_url}}/{{meta_img}}">
+    <meta property="twitter:image" content="{{blog_url}}/{{meta_img}}" />
     {{/if}}
 
     {{#if langs}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     {{#each langs}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/{{this}}.min.js"></script>
@@ -42,7 +42,7 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     {{/if}}
 
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/style.css" />
 
     <script src="
         https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js

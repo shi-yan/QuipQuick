@@ -21,4 +21,4 @@ chrono = "0.4"
 image = "0.24"
 serde_yaml = "0.9"
 slug = "0.1"
-#thumbhash = "0.1"
+rss = { version = "2.0", features = ["validation"] }

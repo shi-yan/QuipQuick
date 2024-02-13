@@ -36,6 +36,8 @@ use serde::Deserialize;
 use std::cmp;
 use std::collections::{HashMap, HashSet};
 extern crate slug;
+use rss::validation::Validate;
+use rss::{ChannelBuilder, GuidBuilder, ImageBuilder, Item, ItemBuilder};
 use slug::slugify;
 
 fn default_as_false() -> bool {
@@ -115,7 +117,7 @@ struct Post {
     newer_post: Option<(String, String)>,
     discussion_url: Option<String>,
     meta_img: Option<String>,
-    langs: HashSet<String>
+    langs: HashSet<String>,
 }
 
 impl Serialize for Post {
@@ -693,6 +695,18 @@ fn main() {
             String::new()
         };
 
+        let meta_image = if global.contains_key("meta_image") {
+            let mut meta_image = String::new();
+            if let Some(meta_image_value) = global.get("meta_image") {
+                if let toml::Value::String(meta_image_str) = meta_image_value {
+                    meta_image = meta_image_str.clone();
+                }
+            }
+            meta_image
+        } else {
+            String::new()
+        };
+
         let google_analytics_id = if global.contains_key("google_analytics_id") {
             let mut google_analytics_id = String::new();
             if let Some(google_analytics_id_value) = global.get("google_analytics_id") {
@@ -845,7 +859,7 @@ fn main() {
                         } else {
                             None
                         },
-                        langs: langs
+                        langs: langs,
                     };
                     post_list.push(data.clone());
                 }
@@ -867,6 +881,8 @@ fn main() {
         let page_size: u32 = (post_list.len() as f32 / PAGE_ITEM_COUNT as f32).ceil() as u32;
 
         let mut tags: HashMap<String, (String, Vec<u32>)> = HashMap::new();
+
+        let mut rss_items: Vec<Item> = Vec::new();
 
         for index in 0..post_list.len() {
             if index > 0 {
@@ -909,7 +925,37 @@ fn main() {
                     tags.insert(t.slug.clone(), (t.tag.clone(), vec![index as u32]));
                 }
             }
+
+            let permanent_link = format!("{}/{}", &blog_url, post_list[index].src);
+            let guid = GuidBuilder::default().value(permanent_link.clone()).build();
+
+            let item = ItemBuilder::default()
+                .title(Some(post_list[index].title.clone()))
+                .link(Some(permanent_link))
+                .description(Some(post_list[index].description.clone()))
+                .comments(post_list[index].discussion_url.clone())
+                .guid(Some(guid))
+                .build();
+            rss_items.push(item)
         }
+
+        let rss_image = ImageBuilder::default()
+            .link(format!("{}/{}", &blog_url, meta_image))
+            .build();
+
+        let channel = ChannelBuilder::default()
+            .title(blog_title.clone())
+            .link(blog_url.clone())
+            .description(blog_description.clone())
+            .items(rss_items)
+            .image(Some(rss_image))
+            .build();
+
+        let rss_output_path = format!("{}/rss.xml", target_folder);
+
+        // println!("{} {:?}", channel.to_string(), channel.validate().unwrap());
+
+        fs::write(rss_output_path, channel.to_string()).unwrap();
 
         let index_template = fs::read_to_string("template/index.html")
             .expect("Should have been able to read the file");
