@@ -483,6 +483,27 @@ code {
     text-transform: uppercase;
 }
 
+.footnote-ref {
+        vertical-align: super; /* 2 */
+        font-size: 0.5em; /* 3 */
+        margin-left: 2px; /* 4 */
+        color: #876fd6; /* 5 */
+        text-decoration: underline; /* 5 */
+        cursor: pointer; /* 5 */
+}
+
+.footnote-def {
+    margin: 10px;
+}
+
+.footnote-row td {
+    min-width: 40px;
+}
+
+.footnote-row p {
+    margin: 8px
+}
+
 ::-webkit-scrollbar-thumb {
     background: rgba(90, 90, 90);
     border-radius: 4px;

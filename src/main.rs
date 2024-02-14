@@ -36,9 +36,9 @@ use serde::Deserialize;
 use std::cmp;
 use std::collections::{HashMap, HashSet};
 extern crate slug;
-use rss::validation::Validate;
 use rss::{ChannelBuilder, GuidBuilder, ImageBuilder, Item, ItemBuilder};
 use slug::slugify;
+use itertools::Itertools;
 
 fn default_as_false() -> bool {
     false
@@ -54,8 +54,6 @@ struct PostInfo {
     description: String,
     #[serde(default)]
     tags: Vec<String>,
-    #[serde(default = "default_as_false")]
-    is_draft: bool,
 }
 
 #[derive(RustEmbed)]
@@ -216,6 +214,13 @@ struct SelectedMetaImage {
     pixels: u32,
 }
 
+#[derive(Debug, Clone)]
+struct Footnote {
+    id: String,
+    count: i32,
+    html: String,
+}
+
 fn render_markdown(
     node: &Node,
     output: &mut String,
@@ -225,6 +230,7 @@ fn render_markdown(
     meta: &mut PostInfo,
     langs: &mut HashSet<String>,
     selected_meta_image: &mut Option<SelectedMetaImage>,
+    footnotes: &mut HashMap<String, Footnote>,
 ) {
     match node {
         Paragraph(p) => {
@@ -240,6 +246,7 @@ fn render_markdown(
                     meta,
                     langs,
                     selected_meta_image,
+                    footnotes,
                 );
             }
 
@@ -260,6 +267,7 @@ fn render_markdown(
                     meta,
                     langs,
                     selected_meta_image,
+                    footnotes,
                 );
             }
         }
@@ -276,13 +284,41 @@ fn render_markdown(
                     meta,
                     langs,
                     selected_meta_image,
+                    footnotes,
                 );
             }
 
             output.push_str("</blockquote>");
         }
 
-        FootnoteDefinition(_) => {}
+        FootnoteDefinition(f) => {
+            let mut footnote_html: String = String::new();
+
+            for n in &f.children {
+                render_markdown(
+                    n,
+                    &mut footnote_html,
+                    folder,
+                    target_folder,
+                    count,
+                    meta,
+                    langs,
+                    selected_meta_image,
+                    footnotes,
+                );
+            }
+
+            if let Some(existing_f) = footnotes.get_mut(&f.identifier) {
+                existing_f.html = footnote_html;
+            } else {
+                let footnote = Footnote {
+                    id: f.identifier.clone(),
+                    count: footnotes.len() as i32 + 1,
+                    html: footnote_html,
+                };
+                footnotes.insert(f.identifier.clone(), footnote);
+            }
+        }
         MdxJsxFlowElement(_) => {}
         MdxjsEsm(_) => {}
         List(l) => {
@@ -302,6 +338,7 @@ fn render_markdown(
                     meta,
                     langs,
                     selected_meta_image,
+                    footnotes,
                 );
             }
 
@@ -344,12 +381,34 @@ fn render_markdown(
                     meta,
                     langs,
                     selected_meta_image,
+                    footnotes,
                 );
             }
             output.push_str("</em>");
         }
         MdxTextExpression(_) => {}
-        FootnoteReference(_) => {}
+        FootnoteReference(f) => {
+           let count = if !footnotes.contains_key(&f.identifier) {
+                let count = footnotes.len() as i32 + 1;
+                let footnote = Footnote {
+                    id: f.identifier.clone(),
+                    count,
+                    html: String::new(),
+                };
+                footnotes.insert(f.identifier.clone(), footnote);
+                count
+            } else {
+                footnotes.get(&f.identifier).unwrap().count
+            };
+
+            output.push_str(
+                format!(
+                    "<a class=\"footnote-ref\" href=\"#footnote_{}\">[{}]</a>",
+                    f.identifier, count
+                )
+                .as_str(),
+            );
+        }
         Html(h) => {
             output.push_str(&h.value);
         }
@@ -460,6 +519,7 @@ fn render_markdown(
                     meta,
                     langs,
                     selected_meta_image,
+                    footnotes,
                 );
             }
             output.push_str("</a>");
@@ -479,6 +539,7 @@ fn render_markdown(
                     meta,
                     langs,
                     selected_meta_image,
+                    footnotes,
                 );
             }
             output.push_str("</strong>");
@@ -521,6 +582,7 @@ fn render_markdown(
                     meta,
                     langs,
                     selected_meta_image,
+                    footnotes,
                 );
             }
             output.push_str(format!("</h{}>", h.depth).as_str());
@@ -538,6 +600,7 @@ fn render_markdown(
                     meta,
                     langs,
                     selected_meta_image,
+                    footnotes,
                 );
             }
             output.push_str("</li>");
@@ -811,10 +874,10 @@ fn main() {
                     date: String::new(),
                     description: String::new(),
                     tags: vec![],
-                    is_draft: false,
                 };
                 let mut selected_meta_image = logo.clone();
                 let mut langs: HashSet<String> = HashSet::new();
+                let mut footnotes: HashMap<String, Footnote> = HashMap::new();
 
                 render_markdown(
                     &ast,
@@ -825,44 +888,56 @@ fn main() {
                     &mut meta,
                     &mut langs,
                     &mut selected_meta_image,
+                    &mut footnotes,
                 );
-                if !meta.is_draft {
-                    let d = meta.date.parse::<DateTimeUtc>().unwrap().0;
-                    let mut tags: Vec<Tag> = Vec::new();
-                    for t in &meta.tags {
-                        tags.push(Tag {
-                            slug: slugify(t),
-                            tag: t.to_lowercase(),
-                        });
+                if footnotes.len() > 0 {
+                    rendered_string += "<table class=\"footnote-def\">";
+                    for key in footnotes.keys().sorted() {
+                        let f = footnotes.get(key).unwrap();
+                        rendered_string += format!(
+                            "<tr class=\"footnote-row\" id=\"footnote_{}\"><td>[{}]: </td><td>{}</td></tr>",
+                            f.id, f.count, f.html
+                        )
+                        .as_str();
                     }
-
-                    let data = Post {
-                        date: d,
-                        description: meta.description,
-                        src: folder.to_string(),
-                        md: rendered_string,
-                        title: meta.title,
-                        tags: tags,
-                        word_count: word_count,
-                        blog_title: blog_title.clone(),
-                        blog_url: blog_url.clone(),
-                        repo: repo.clone(),
-                        quipquick_version: VERSION.to_string(),
-                        current_time: format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
-                        google_analytics: generate_google_analytics_id(&google_analytics_id),
-                        read_time: word_count as u32 / 238,
-                        older_post: None,
-                        newer_post: None,
-                        discussion_url: discussion_url.clone(),
-                        meta_img: if let Some(si) = selected_meta_image {
-                            Some(si.url)
-                        } else {
-                            None
-                        },
-                        langs: langs,
-                    };
-                    post_list.push(data.clone());
+                    rendered_string += "</table>";
                 }
+
+                let d = meta.date.parse::<DateTimeUtc>().unwrap().0;
+                let mut tags: Vec<Tag> = Vec::new();
+                for t in &meta.tags {
+                    tags.push(Tag {
+                        slug: slugify(t),
+                        tag: t.to_lowercase(),
+                    });
+                }
+
+                let data = Post {
+                    date: d,
+                    description: meta.description,
+                    src: folder.to_string(),
+                    md: rendered_string,
+                    title: meta.title,
+                    tags: tags,
+                    word_count: word_count,
+                    blog_title: blog_title.clone(),
+                    blog_url: blog_url.clone(),
+                    repo: repo.clone(),
+                    quipquick_version: VERSION.to_string(),
+                    current_time: format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
+                    google_analytics: generate_google_analytics_id(&google_analytics_id),
+                    read_time: word_count as u32 / 238,
+                    older_post: None,
+                    newer_post: None,
+                    discussion_url: discussion_url.clone(),
+                    meta_img: if let Some(si) = selected_meta_image {
+                        Some(si.url)
+                    } else {
+                        None
+                    },
+                    langs: langs,
+                };
+                post_list.push(data.clone());
             }
         }
 
@@ -944,7 +1019,7 @@ fn main() {
             .title(blog_title.clone())
             .link(blog_url.clone())
             .build();
-        
+
         let channel = ChannelBuilder::default()
             .title(blog_title.clone())
             .link(blog_url.clone())

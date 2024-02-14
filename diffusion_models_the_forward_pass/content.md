@@ -9,9 +9,13 @@ As an extreme visual learner, grasping concepts without a mental picture or a co
 
 ![test](test.jpg)
 
-One common argument against emphasizing intuition in learning is the concern that it might compromise the rigor of the true mathematical form. A poorly crafted visualization or example could potentially lead to misunderstandings. However, I believe it's advantageous to commence with Newton's laws, even though general relativity offers a closer approximation to reality.
+One common argument against emphasizing intuition in learning is the concern that it might compromise the rigor of the true mathematical form. A poorly crafted visualization or example could potentially lead to misunderstandings. However, I believe it's advantageous[^atest] to commence with Newton's laws, even though general relativity offers a closer approximation to reality.
 
-While the lack of visual explanations isn't solely responsible for my frustration, it's evident that as a visual learner growing up, I found myself in the minority. In a classroom where most students seemed to effortlessly grasp concepts, I often found myself as the sole voice expressing difficulty and seeking visual support.
+[^atest]: test footnote
+
+While the lack of visual explanations isn't solely responsible for my frustration, it's evident that as a visual learner growing up, I found myself in the minority. In a classroom where most students seemed to effortlessly grasp concepts, I often found myself as the sole voice expressing difficulty and seeking visual support.[^b]
+
+[^b]: test 2 foot note
 
 Today, I delved deep into diffusion models, and once again, I encountered the frustration of a lack of visual and down-to-earth explanations. This experience drives me to document my current understanding, with the goal of creating an example that showcases my ideal explanation—one that incorporates visuals and practical examples, illustrating how I believe this topic should be presented.
 
