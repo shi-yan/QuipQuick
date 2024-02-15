@@ -2,6 +2,12 @@
 name = "quipquick"
 version = "0.1.0"
 edition = "2021"
+authors = ["Shi Yan"]
+description = "A static blog generator"
+repository = "https://github.com/shi-yan/quipquick"
+license = "MIT OR Apache-2.0"
+keywords = ["blog", "markdown", "static site generator"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
