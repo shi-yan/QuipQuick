@@ -51,10 +51,6 @@ enum Commands {
         #[arg(short, long, default_value_t = String::from("dist"))]
         target: String,
 
-        /// Manifest file
-        #[arg(short, long, default_value_t = String::from("quipquick.toml"))]
-        manifest: String,
-
         /// Blog url prefix
         #[arg(short, long)]
         prefix: Option<String>,
@@ -86,10 +82,9 @@ fn main() {
         }
         Commands::Pub {
             target,
-            manifest,
             prefix,
         } => {
-            publish(manifest, target);
+            publish(target);
         }
         Commands::Write { title } => {
             new_post(title, false);
