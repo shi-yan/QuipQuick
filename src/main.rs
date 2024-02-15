@@ -7,7 +7,9 @@ mod post;
 mod md2html;
 mod new;
 mod publish;
+mod write;
 use publish::publish;
+use write::new_post;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -41,7 +43,7 @@ enum Commands {
     /// Create a new post.
     Write {
         /// Blog title
-        title: String,
+        title: Option<String>,
     },
     /// Generate your blog.
     Pub {
@@ -89,6 +91,8 @@ fn main() {
         } => {
             publish(manifest, target);
         }
-        Commands::Write { title } => {}
+        Commands::Write { title } => {
+            new_post(title, false);
+        }
     }
 }
