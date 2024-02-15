@@ -1,5 +1,4 @@
-use markdown::mdast::Node;
-use markdown::mdast::Node::{
+use markdown::mdast::Node::{self,
     BlockQuote, Break, Code, Delete, Emphasis, FootnoteDefinition, FootnoteReference, Heading,
     Html, Image, ImageReference, InlineCode, InlineMath, Link, LinkReference, List, ListItem, Math,
     MdxFlowExpression, MdxJsxFlowElement, MdxJsxTextElement, MdxTextExpression, MdxjsEsm,
@@ -8,8 +7,6 @@ use markdown::mdast::Node::{
 extern crate fs_extra;
 use image::io::Reader as ImageReader;
 use std::collections::{HashMap, HashSet};
-extern crate slug;
-
 use crate::frontmatter::FrontmatterInfo;
 
 #[derive(Debug, Clone)]

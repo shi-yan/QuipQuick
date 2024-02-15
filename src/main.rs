@@ -3,8 +3,7 @@ use dateparser::parse_with_timezone;
 use handlebars::{handlebars_helper, Handlebars, JsonRender};
 use std::cmp::Ordering;
 use std::error::Error;
-use std::fs::File;
-use std::fs::{self, FileType};
+use std::fs::{self, File, FileType};
 use std::io::ErrorKind;
 use std::path::Path;
 use std::path::PathBuf;
@@ -18,23 +17,25 @@ use fs_extra::dir::CopyOptions;
 use fs_extra::TransitProcess;
 use handlebars::JsonValue;
 use image::io::Reader as ImageReader;
+use itertools::Itertools;
 use markdown::{Constructs, Options, ParseOptions};
+use rss::{ChannelBuilder, GuidBuilder, ImageBuilder, Item, ItemBuilder};
 use rust_embed::RustEmbed;
+use serde_json::json;
 use std::cmp;
 use std::collections::{HashMap, HashSet};
-extern crate slug;
-use itertools::Itertools;
-use rss::{ChannelBuilder, GuidBuilder, ImageBuilder, Item, ItemBuilder};
-use slug::slugify;
-use serde_json::json;
+#[macro_use]
+extern crate slugify;
+use slugify::slugify;
 
 mod frontmatter;
 use crate::frontmatter::FrontmatterInfo;
 mod post;
-use crate::post::{Tag, Post};
+use crate::post::{Post, Tag};
 mod md2html;
-use crate::md2html::{Footnote, SelectedMetaImage, render_markdown};
+use crate::md2html::{render_markdown, Footnote, SelectedMetaImage};
 use markdown::to_mdast;
+mod new;
 
 #[derive(RustEmbed)]
 #[folder = "template_src/"]
@@ -45,7 +46,7 @@ struct Template;
 #[command(propagate_version = true)]
 struct Args {
     #[command(subcommand)]
-    command: Commands
+    command: Commands,
 }
 
 #[derive(Subcommand, Debug)]
@@ -53,16 +54,21 @@ struct Args {
 enum Commands {
     /// Start a new blog.
     New {
-        /// Blog name
-        name: String,
+        /// You blog's name
+        #[arg(short, long)]
+        name: Option<String>,
 
         /// Folder for your blog's raw content
         #[arg(short, long)]
         folder: Option<String>,
 
         /// Target folder for the generated blog
-        #[arg(short, long, default_value_t = String::from("../dist"))]
-        target: String,
+        #[arg(short, long)]
+        target: Option<String>,
+
+        /// Generate the blog boilerplate without showing the prompt
+        #[arg(short, long, default_value_t = false)]
+        quiet: bool,
     },
     /// Create a new post.
     Write {
@@ -106,7 +112,7 @@ fn populate_templates(force: bool) {
     if target_folder_exists {
         let target_is_dir: bool = Path::new(target_folder).is_dir();
         if !target_is_dir {
-            println!("template {} is not a folder.", target_folder);
+            println!("{} is not a folder.", target_folder);
             return;
         }
     } else {
@@ -127,9 +133,7 @@ fn populate_templates(force: bool) {
     }
 }
 
-
-fn publish(manifest:String, target: String) {
-
+fn publish(manifest: String, target: String) {
     let current_time: DateTime<Local> = Local::now();
 
     populate_templates(true);
@@ -384,7 +388,7 @@ fn publish(manifest:String, target: String) {
                 let mut tags: Vec<Tag> = Vec::new();
                 for t in &frontmatter.tags {
                     tags.push(Tag {
-                        slug: slugify(t),
+                        slug: slugify!(t),
                         tag: t.to_lowercase(),
                     });
                 }
@@ -491,26 +495,35 @@ fn publish(manifest:String, target: String) {
             rss_items.push(item)
         }
 
-        let rss_image = ImageBuilder::default()
-            .url(format!("{}/{}", &blog_url, meta_image))
-            .title(blog_title.clone())
-            .link(blog_url.clone())
-            .build();
-
-        let channel = ChannelBuilder::default()
-            .title(blog_title.clone())
-            .link(blog_url.clone())
-            .description(blog_description.clone())
-            .items(rss_items)
-            .image(Some(rss_image))
-            .build();
-
         let rss_output_path = format!("{}/rss.xml", target_folder);
 
-        // println!("{} {:?}", channel.to_string(), channel.validate().unwrap());
+        let channel = if let Some(l) = &logo {
+            let rss_image = ImageBuilder::default()
+                .url(format!("{}/{}", &blog_url, l.url))
+                .title(blog_title.clone())
+                .link(blog_url.clone())
+                .build();
 
+            let channel = ChannelBuilder::default()
+                .title(blog_title.clone())
+                .link(blog_url.clone())
+                .description(blog_description.clone())
+                .items(rss_items)
+                .image(Some(rss_image))
+                .build();
+
+            channel
+        } else {
+            let channel = ChannelBuilder::default()
+                .title(blog_title.clone())
+                .link(blog_url.clone())
+                .description(blog_description.clone())
+                .items(rss_items)
+                .build();
+
+            channel
+        };
         fs::write(rss_output_path, channel.to_string()).unwrap();
-
         let index_template = fs::read_to_string("template/index.html")
             .expect("Should have been able to read the file");
 
@@ -661,33 +674,6 @@ fn publish(manifest:String, target: String) {
         .unwrap();
         fs::copy("template/style.css", format!("{}/style.css", target_folder)).unwrap();
     }
-
-    /*let mut reg = Handlebars::new();
-    handlebars_helper!(date2: |dt: OffsetDateTime, {fmt:str = "[year]-[month]-[day]"}|
-        dt.format(&parse(fmt).unwrap()).unwrap()
-    );
-    reg.register_helper("date2", Box::new(date2));
-
-    // render without register
-    println!(
-        "{}",
-        reg.render_template("Hello {{name}}", &json!({"name": "foo"}))
-            .unwrap()
-    );*/
-
-    // register template using given name
-    /*reg.register_template_string("tpl_1", "Good afternoon, {{name}}")
-        .unwrap();
-    println!("{}", reg.render("tpl_1", &json!({"name": "foo"})).unwrap());
-
-    let data = OffsetDateTime::now_utc();
-
-    println!(
-        "{}",
-        reg.render_template("<div>{{date2 this}}</div>", &data)
-            .unwrap()
-    );*/
-
 }
 
 fn main() {
@@ -697,16 +683,26 @@ fn main() {
        //  / / | | | | '_ \\ //  / / | | | |/ __| |/ /
       / \\_/ /| |_| | | |_) / \\_/ /| |_| | | (__|   < 
       \\___,_\\ \\__,_|_| .__/\\___,_\\ \\__,_|_|\\___|_|\\_\\
-                     |_|                             "
+                     |_|                             \n"
     );
     //https://patorjk.com/software/taag/#p=display&f=Ogre&t=QuipQuick
-
 
     let args = Args::parse();
 
     match args.command {
-        Commands::New { name, folder, target } => {}
-        Commands::Pub { target, manifest, prefix } => {
+        Commands::New {
+            name,
+            folder,
+            target,
+            quiet,
+        } => {
+            new::new_blog(name, folder, target, quiet);
+        }
+        Commands::Pub {
+            target,
+            manifest,
+            prefix,
+        } => {
             publish(manifest, target);
         }
         Commands::Write { title } => {}
