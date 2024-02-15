@@ -3,10 +3,46 @@ use inquire::{
     Confirm, Text,
 };
 
+use rust_embed::RustEmbed;
 use slugify::slugify;
-use std::{fs::{self, File}, io::Write};
-use std::path::Path;
 use std::io::LineWriter;
+use std::path::Path;
+use std::{
+    fs::{self, File},
+    io::Write,
+};
+
+#[derive(RustEmbed)]
+#[folder = "template_src/"]
+pub struct Template;
+
+pub fn populate_templates(base_folder: &str, force: bool) {
+    let target_folder = format!("{}/template", base_folder);
+    let target_folder_exists = Path::new(&target_folder).exists();
+
+    if target_folder_exists {
+        let target_is_dir: bool = Path::new(&target_folder).is_dir();
+        if !target_is_dir {
+            println!("{} is not a folder.", &target_folder);
+            return;
+        }
+    } else {
+        fs::create_dir(&target_folder)
+            .expect(format!("Unable to create template folder: {}.", &target_folder).as_str());
+    }
+
+    let files = ["post.html", "index.html", "style.css"];
+
+    for f in files {
+        let file_path = format!("{}/{}", target_folder, f);
+        let template_exists = Path::new(&file_path).exists();
+
+        if force || !template_exists {
+            let content = Template::get(f).unwrap();
+            fs::write(&file_path, content.data).unwrap();
+        }
+    }
+}
 
 pub fn new_blog(
     title: Option<String>,
@@ -112,36 +148,88 @@ pub fn new_blog(
 
                 if !cont.unwrap() {
                     print!("Terminated due to non-empty folder");
-                    return
+                    return;
                 }
             }
         } else {
-            fs::create_dir_all(&full_blog_target)
-                .expect(format!("Unable to create blog target folder: {}.", &full_blog_target).as_str());
+            fs::create_dir_all(&full_blog_target).expect(
+                format!(
+                    "Unable to create blog target folder: {}.",
+                    &full_blog_target
+                )
+                .as_str(),
+            );
         }
 
         let file = File::create(format!("{}/quipquick.toml", &blog_folder)).unwrap();
         let mut file = LineWriter::new(file);
 
-        file.write_all(format!("title = \"{}\"\n", &blog_title).as_bytes()).unwrap();
+        file.write_all(format!("title = \"{}\"\n", &blog_title).as_bytes())
+            .unwrap();
         file.write_all(b"# Your github repo\n").unwrap();
-        file.write_all(b"repo = \"https://github.com/shi-yan/QuipQuick\"\n").unwrap();
-        file.write_all(b"# Url prefix if your blog is not deployed at the root. Need to have the slash /.\n").unwrap();
+        file.write_all(b"repo = \"https://github.com/shi-yan/QuipQuick\"\n")
+            .unwrap();
+        file.write_all(
+            b"# Url prefix if your blog is not deployed at the root. Need to have the slash /.\n",
+        )
+        .unwrap();
         file.write_all(b"prefix = \"\"\n").unwrap();
-        file.write_all(format!("target = \"{}\"\n", &blog_target).as_bytes()).unwrap();
+        file.write_all(format!("target = \"{}\"\n", &blog_target).as_bytes())
+            .unwrap();
         file.write_all(b"# Blog url\n").unwrap();
-        file.write_all(b"url = \"http://localhost:8000\"\n").unwrap();
+        file.write_all(b"url = \"http://localhost:8000\"\n")
+            .unwrap();
         file.write_all(b"description = \"\"\"\n").unwrap();
         file.write_all(b"Your blog's description.\"\"\"\n").unwrap();
         file.write_all(b"# google_analytics_id = \"\"\n").unwrap();
-        file.write_all(b"# Your blog's github discussion url\n").unwrap();
-        file.write_all(b"# discussion_url = \"https://github.com/shi-yan/shi-yan.github.io/discussions\"\n").unwrap();
-        file.write_all(b"logo = \"326807.jpeg\"\n").unwrap();
-        file.write_all(b"\ncontent =[\"diffusion_models_the_forward_pass\",]\n").unwrap();
-        file.flush();
+        file.write_all(b"# Your blog's github discussion url\n")
+            .unwrap();
+        file.write_all(
+            b"# discussion_url = \"https://github.com/shi-yan/shi-yan.github.io/discussions\"\n",
+        )
+        .unwrap();
+        file.write_all(b"logo = \"logo.png\"\n").unwrap();
+        file.write_all(b"\ncontent =[\"dummy_post\",]\n")
+            .unwrap();
+        file.flush().unwrap();
 
-        println!("Your blog {} has been generated in {}.", &blog_title, &blog_folder);
-        println!("Modify the manifest file {}/quipquick.toml to configure your blog.", &blog_folder);
+        println!(
+            "Your blog {} has been generated in {}.",
+            &blog_title, &blog_folder
+        );
+        println!(
+            "Modify the manifest file {}/quipquick.toml to configure your blog.",
+            &blog_folder
+        );
 
+        populate_templates(&blog_folder, true);
+
+        let logo_file = Template::get("logo.png").unwrap();
+        fs::write(
+            format!("{}/logo.png", &blog_folder).as_str(),
+            logo_file.data,
+        )
+        .unwrap();
+
+        let dummy_folder = format!("{}/dummy_post", &blog_folder);
+
+        if !Path::new(&dummy_folder).exists() {
+            fs::create_dir_all(&dummy_folder)
+                .expect(format!("Unable to create dummy post folder: {}.", &dummy_folder).as_str());
+        }
+
+        let dummy_post_file = Template::get("content.md").unwrap();
+        fs::write(
+            format!("{}/content.md", &dummy_folder).as_str(),
+            dummy_post_file.data,
+        )
+        .unwrap();
+
+        let test_image = Template::get("test.jpg").unwrap();
+        fs::write(
+            format!("{}/test.jpg", &dummy_folder).as_str(),
+            test_image.data,
+        )
+        .unwrap();
     }
 }

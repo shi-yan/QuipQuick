@@ -20,7 +20,6 @@ use image::io::Reader as ImageReader;
 use itertools::Itertools;
 use markdown::{Constructs, Options, ParseOptions};
 use rss::{ChannelBuilder, GuidBuilder, ImageBuilder, Item, ItemBuilder};
-use rust_embed::RustEmbed;
 use serde_json::json;
 use std::cmp;
 use std::collections::{HashMap, HashSet};
@@ -36,10 +35,8 @@ mod md2html;
 use crate::md2html::{render_markdown, Footnote, SelectedMetaImage};
 use markdown::to_mdast;
 mod new;
+use new::populate_templates;
 
-#[derive(RustEmbed)]
-#[folder = "template_src/"]
-struct Template;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -105,38 +102,11 @@ fn generate_google_analytics_id(id: &str) -> String {
     );
 }
 
-fn populate_templates(force: bool) {
-    let target_folder = "template";
-    let target_folder_exists = Path::new("template").exists();
-
-    if target_folder_exists {
-        let target_is_dir: bool = Path::new(target_folder).is_dir();
-        if !target_is_dir {
-            println!("{} is not a folder.", target_folder);
-            return;
-        }
-    } else {
-        fs::create_dir(target_folder)
-            .expect(format!("Unable to create template folder: {}.", target_folder).as_str());
-    }
-
-    let files = ["post.html", "index.html", "style.css"];
-
-    for f in files {
-        let file_path = format!("{}/{}", target_folder, f);
-        let template_exists = Path::new(&file_path).exists();
-
-        if force || !template_exists {
-            let content = Template::get(f).unwrap();
-            fs::write(&file_path, content.data).unwrap();
-        }
-    }
-}
 
 fn publish(manifest: String, target: String) {
     let current_time: DateTime<Local> = Local::now();
 
-    populate_templates(true);
+    populate_templates("./", true);
 
     const VERSION: &str = env!("CARGO_PKG_VERSION");
 
