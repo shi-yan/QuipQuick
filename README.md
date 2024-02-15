@@ -12,6 +12,7 @@ To address these challenges and to have the freedom to customize my blog extensi
 * RSS feed.
 * Footnote.
 * Customizable theme.
+* Code block with syntax highlighting.
 
 ## Install
 
