@@ -33,6 +33,7 @@ This command will set up a new blog template for you to start writing.
 ```bash
 quipquick write
 ```
+After create a new post, modify the manifest `quipquick.toml` to include the new post folder.
 
 3. Publish your blog
 ```bash

@@ -215,7 +215,7 @@ pub fn render_markdown(
             output.push_str("<div class=\"img-container\">");
 
             let img = ImageReader::open(format!("{}/{}", folder, i.url))
-                .unwrap()
+                .expect(format!("Image {}/{} is not found.", folder, i.url).as_str())
                 .decode()
                 .unwrap();
 
