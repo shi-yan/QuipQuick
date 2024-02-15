@@ -1,4 +1,4 @@
-![logo](template_src/logo.png)
+<img src="template_src/logo.png" width="400" height="400" />
 
 QuipQuick is a static blog generator tailored for effortless deployment on GitHub Pages. While I previously utilized Hugo + PaperModX, I encountered two specific issues that led me to develop QuipQuick.
 
