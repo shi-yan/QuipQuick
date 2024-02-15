@@ -1,5 +1,5 @@
 use inquire::{
-    validator::{StringValidator, Validation},
+    validator:: Validation,
     Confirm, Text,
 };
 

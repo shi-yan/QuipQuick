@@ -1,34 +1,26 @@
-use clap::{Parser, Subcommand};
-use dateparser::parse_with_timezone;
-use handlebars::{handlebars_helper, Handlebars, JsonRender};
-use std::cmp::Ordering;
-use std::error::Error;
-use std::fs::{self, File, FileType};
-use std::io::ErrorKind;
-use std::path::Path;
-use std::path::PathBuf;
-use time::format_description::parse;
-use time::OffsetDateTime;
-use toml::Value;
 use chrono::Local;
 use chrono::{DateTime, Datelike};
-use fs_extra::dir::CopyOptions;
-use fs_extra::TransitProcess;
+use dateparser::parse_with_timezone;
+use handlebars::Handlebars;
 use handlebars::JsonValue;
 use image::io::Reader as ImageReader;
 use itertools::Itertools;
-use markdown::{Constructs, Options, ParseOptions};
+use markdown::Options;
 use rss::{ChannelBuilder, GuidBuilder, ImageBuilder, Item, ItemBuilder};
 use serde_json::json;
-use std::cmp;
-use std::collections::{HashMap, HashSet};
 use slugify::slugify;
+use std::cmp;
+use std::cmp::Ordering;
+use std::collections::{HashMap, HashSet};
+use std::fs;
+use std::path::Path;
+use toml::Value;
 
 use crate::frontmatter::FrontmatterInfo;
-use crate::post::{Post, Tag};
 use crate::md2html::{render_markdown, Footnote, SelectedMetaImage};
-use markdown::to_mdast;
 use crate::new::populate_templates;
+use crate::post::{Post, Tag};
+use markdown::to_mdast;
 
 fn generate_google_analytics_id(id: &str) -> String {
     return format!(
@@ -43,7 +35,6 @@ fn generate_google_analytics_id(id: &str) -> String {
         id, id
     );
 }
-
 
 pub fn publish(manifest: String, target: String) {
     let current_time: DateTime<Local> = Local::now();
@@ -148,18 +139,6 @@ pub fn publish(manifest: String, target: String) {
                 }
             }
             url
-        } else {
-            String::new()
-        };
-
-        let meta_image = if global.contains_key("meta_image") {
-            let mut meta_image = String::new();
-            if let Some(meta_image_value) = global.get("meta_image") {
-                if let toml::Value::String(meta_image_str) = meta_image_value {
-                    meta_image = meta_image_str.clone();
-                }
-            }
-            meta_image
         } else {
             String::new()
         };

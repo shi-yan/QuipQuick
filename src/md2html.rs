@@ -4,7 +4,6 @@ use markdown::mdast::Node::{self,
     MdxFlowExpression, MdxJsxFlowElement, MdxJsxTextElement, MdxTextExpression, MdxjsEsm,
     Paragraph, Root, Strong, Text, ThematicBreak, Toml, Yaml,
 };
-extern crate fs_extra;
 use image::io::Reader as ImageReader;
 use std::collections::{HashMap, HashSet};
 use crate::frontmatter::FrontmatterInfo;
@@ -37,8 +36,7 @@ pub fn render_markdown(
     match node {
         Paragraph(p) => {
             output.push_str("<p>");
-
-            for n in node.children().unwrap() {
+            for n in &p.children {
                 render_markdown(
                     n,
                     output,
@@ -406,7 +404,7 @@ pub fn render_markdown(
             }
             output.push_str("</li>");
         }
-        ThematicBreak(tb) => {}
+        ThematicBreak(_tb) => {}
         _ => {
             println!("Unimplemented node. {:?}", &node);
         }
