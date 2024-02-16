@@ -1,11 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Exo+2&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Yanone+Kaffeesatz:wght@300&display=swap');
 
+:root {
+    --dark-description-text-color: #bababa;
+    --purple-link-text-color: #876fd6;
+    --normal-text-color: #dadadb;
+    --page-background-color: #1d1e20;
+    --lighter-card-background-color: #2e2e33;
+    --quote-border-color: #818181;
+    --card-hover-background-color: #3e3e43;
+    --code-block-background-color: #181818;
+}
+
 body {
     position: relative;
     min-width: 100%;
     min-height: 100%;
-    background-color: #1d1e20;
-    color: rgb(218, 218, 219);
+    background-color: var(--page-background-color);
+    color: var(--normal-text-color);
     overflow-x: hidden;
     counter-reset: katexEqnNo mmlEqnNo;
     height: 100vh;
@@ -13,7 +24,7 @@ body {
 }
 
 #page {
-    position:relative;
+    position: relative;
     width: 100%;
     min-height: 100%;
     display: grid;
@@ -35,7 +46,6 @@ body {
     vertical-align: middle;
 }
 
-
 .blog-title {
     font-family: 'Exo 2', sans-serif;
     font-size: 42px;
@@ -49,36 +59,36 @@ body {
     padding: 10px;
     margin: 10px;
     font-family: "Open Sans", sans-serif;
-    color: rgb(186, 186, 186);
+    color: var(--dark-description-text-color);
     font-size: 20px;
 }
 
 .icon {
-    color: #dadadb;
+    color: var(--normal-text-color);
     text-decoration: none;
     vertical-align: middle;
     cursor: pointer;
 }
 
 .icon:hover {
-    color: #876fd6;
+    color: var(--purple-link-text-color);
 }
 
 .blog-title {
     text-decoration: none;
-    color: #dadadb;
+    color: var(--normal-text-color);
     cursor: pointer;
 }
 
 .blog-title:hover {
-    color: #876fd6;
+    color: var(--purple-link-text-color);
 }
 
 .link {
     text-decoration: none;
     cursor: pointer;
     font-style: italic;
-    color: #876fd6;
+    color: var(--purple-link-text-color);
 }
 
 .video {
@@ -133,17 +143,17 @@ body {
 
 .meta {
     text-decoration: none;
-    color: #dadadb;
+    color: var(--normal-text-color);
 }
 
 .tag {
     text-decoration: none;
-    color: #dadadb;
+    color: var(--normal-text-color);
     cursor: pointer;
 }
 
 .tag:hover {
-    color: #876fd6;
+    color: var(--purple-link-text-color);
 }
 
 .content {
@@ -155,27 +165,27 @@ body {
     padding: 10px;
     border-radius: 8px;
     margin: 10px;
-    background-color: #2e2e33;
+    background-color: var(--lighter-card-background-color);
     font-family: "Open Sans", sans-serif;
 }
 
 .content-item:hover {
-    background-color: #3e3e43;
+    background-color: var(--card-hover-background-color);
 }
 
 .content-item a {
     text-decoration: none;
-    color: #dadadb;
+    color: var(--normal-text-color);
 }
 
 .content-item-description {
     margin-left: 20px;
-    color: rgb(186, 186, 186);
+    color: var(--dark-description-text-color);
 }
 
 .content-item-meta {
     margin-left: 20px;
-    color: rgb(186, 186, 186);
+    color: var(--dark-description-text-color);
     text-transform: uppercase;
     font-size: 11px;
 }
@@ -245,15 +255,15 @@ article p {
 }
 
 blockquote {
-    background: #2e2e33;
-    border-left: 10px solid #818181;
+    background: var(--lighter-card-background-color);
+    border-left: 10px solid var(--quote-border-color);
     margin: 1.5em 10px;
     padding: 0.5em 10px;
     quotes: "\201C" "\201D" "\2018" "\2019";
 }
 
 blockquote:before {
-    color: #dadadb;
+    color: var(--normal-text-color);
     content: open-quote;
     font-size: 4em;
     line-height: 0.1em;
@@ -269,7 +279,6 @@ blockquote p {
     border-radius: 8px;
     overflow: hidden;
 }
-
 
 .img-container {
     max-width: 100%;
@@ -330,7 +339,7 @@ blockquote p {
     width: 80%;
     max-width: 700px;
     text-align: center;
-    color: #ccc;
+    color: var(--normal-text-color);
     padding: 10px 0;
     height: 150px;
 }
@@ -357,7 +366,7 @@ blockquote p {
     position: absolute;
     top: 15px;
     right: 35px;
-    color: #f1f1f1;
+    color: var(--dark-description-text-color);
     font-size: 40px;
     font-weight: bold;
     transition: 0.3s;
@@ -365,7 +374,7 @@ blockquote p {
 
 .close:hover,
 .close:focus {
-    color: #bbb;
+    color: var(--normal-text-color);
     text-decoration: none;
     cursor: pointer;
 }
@@ -378,13 +387,13 @@ blockquote p {
 }
 
 .comment {
-    background-color: #2e2e33;
+    background-color: var(--lighter-card-background-color);
     border-radius: 8px;
     display: block;
     cursor: pointer;
     text-align: center;
     text-decoration: none;
-    color: #dadadb;
+    color: var(--normal-text-color);
     font-size: 24px;
     margin: 8px;
     font-family: 'Yanone Kaffeesatz', sans-serif;
@@ -393,11 +402,11 @@ blockquote p {
 }
 
 .comment:hover {
-    background-color: #4c4c4c;
+    background-color: var(--card-hover-background-color);
 }
 
 code {
-    background-color: #181818;
+    background-color: var(--code-block-background-color);
     border-radius: 4px;
     padding: 2px;
 }
@@ -411,7 +420,7 @@ code {
 
 .older_newer_link {
     text-decoration: none;
-    color: #dadadb;
+    color: var(--normal-text-color);
     font-size: 24px;
     line-height: 24px;
     font-family: 'Yanone Kaffeesatz', sans-serif;
@@ -431,7 +440,7 @@ code {
 .older_newer_link_right:hover {
     border-right-style: solid;
     border-right-width: 2px;
-    border-right-color: #dadadb;
+    border-right-color: var(--normal-text-color);
 }
 
 .older_newer_link_left {
@@ -447,7 +456,7 @@ code {
 .older_newer_link_left:hover {
     border-left-style: solid;
     border-left-width: 2px;
-    border-left-color: #dadadb;
+    border-left-color: var(--normal-text-color);
 }
 
 .pages {
@@ -461,35 +470,35 @@ code {
     padding: 4px;
     border-radius: 8px;
     margin: 4px;
-    background-color: #2e2e33;
+    background-color: var(--lighter-card-background-color);
     font-family: "Open Sans", sans-serif;
-    color: #dadadb;
+    color: var(--normal-text-color);
     min-width: 18px;
     text-align: center;
 }
 
 .page-link:hover {
-    background-color: #3e3e43;
+    background-color: var(--card-hover-background-color);
 }
 
 .page-link.current {
-    background-color: #3e3e43;
+    background-color: var(--card-hover-background-color);
 }
 
 .page-tag {
     font-family: "Open Sans", sans-serif;
-    color: #dadadb;
+    color: var(--normal-text-color);
     font-style: normal;
     text-transform: uppercase;
 }
 
 .footnote-ref {
-        vertical-align: super; /* 2 */
-        font-size: 0.5em; /* 3 */
-        margin-left: 2px; /* 4 */
-        color: #876fd6; /* 5 */
-        text-decoration: underline; /* 5 */
-        cursor: pointer; /* 5 */
+    vertical-align: super;
+    font-size: 0.5em;
+    margin-left: 2px;
+    color: var(--purple-link-text-color);
+    text-decoration: underline;
+    cursor: pointer;
 }
 
 .footnote-def {
@@ -517,5 +526,4 @@ code {
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
-
 }
