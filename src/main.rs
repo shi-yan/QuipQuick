@@ -3,9 +3,9 @@ extern crate fs_extra;
 extern crate slugify;
 
 mod frontmatter;
-mod post;
 mod md2html;
 mod new;
+mod post;
 mod publish;
 mod write;
 use publish::publish;
@@ -51,12 +51,15 @@ enum Commands {
         #[arg(short, long, default_value_t = String::from("dist"))]
         target: String,
 
+        /// Force overwriting theme files. (Reset themes to default, or upgrade themes when QuipQuick has updated. Your local template changes will be lost.)
+        #[arg(short, long, default_value_t = false)]
+        force_overwrite_theme: bool,
+
         /// Blog url prefix
         #[arg(short, long)]
         prefix: Option<String>,
     },
 }
-
 
 fn main() {
     println!(
@@ -82,9 +85,10 @@ fn main() {
         }
         Commands::Pub {
             target,
+            force_overwrite_theme,
             prefix,
         } => {
-            publish(target);
+            publish(target, force_overwrite_theme);
         }
         Commands::Write { title } => {
             new_post(title, false);

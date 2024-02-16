@@ -36,14 +36,15 @@ fn generate_google_analytics_id(id: &str) -> String {
     );
 }
 
-pub fn publish( target: String) {
+pub fn publish(target: String, force_overwrite_theme: bool) {
     let current_time: DateTime<Local> = Local::now();
 
-    populate_templates("./", true);
+    populate_templates("./", force_overwrite_theme);
 
     const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-    let contents = fs::read_to_string("quipquick.toml").expect("Should have been able to read the file");
+    let contents =
+        fs::read_to_string("quipquick.toml").expect("Should have been able to read the file");
 
     let value = match contents.parse::<Value>() {
         Err(error) => {
