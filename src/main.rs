@@ -51,8 +51,8 @@ enum Commands {
         #[arg(short, long, default_value_t = String::from("dist"))]
         target: String,
 
-        /// Force overwriting theme files. (Reset themes to default, or upgrade themes when QuipQuick has updated. Your local template changes will be lost.)
-        #[arg(short, long, default_value_t = false)]
+        /// Force overwriting theme files. (This is used to reset the theme to default or upgrade it when QuipQuick has updated. Careful! Your local template changes will be lost.)
+        #[arg(long, default_value_t = false)]
         force_overwrite_theme: bool,
 
         /// Blog url prefix
