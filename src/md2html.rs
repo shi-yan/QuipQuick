@@ -1,12 +1,13 @@
-use markdown::mdast::Node::{self,
-    BlockQuote, Break, Code, Delete, Emphasis, FootnoteDefinition, FootnoteReference, Heading,
-    Html, Image, ImageReference, InlineCode, InlineMath, Link, LinkReference, List, ListItem, Math,
-    MdxFlowExpression, MdxJsxFlowElement, MdxJsxTextElement, MdxTextExpression, MdxjsEsm,
-    Paragraph, Root, Strong, Text, ThematicBreak, Toml, Yaml,
-};
-use image::io::Reader as ImageReader;
-use std::collections::{HashMap, HashSet};
 use crate::frontmatter::FrontmatterInfo;
+use image::io::Reader as ImageReader;
+use itertools::Itertools;
+use markdown::mdast::Node::{
+    self, BlockQuote, Break, Code, Delete, Emphasis, FootnoteDefinition, FootnoteReference,
+    Heading, Html, Image, ImageReference, InlineCode, InlineMath, Link, LinkReference, List,
+    ListItem, Math, MdxFlowExpression, MdxJsxFlowElement, MdxJsxTextElement, MdxTextExpression,
+    MdxjsEsm, Paragraph, Root, Strong, Text, ThematicBreak, Toml, Yaml,
+};
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone)]
 pub struct SelectedMetaImage {
@@ -219,6 +220,28 @@ pub fn render_markdown(
                 .decode()
                 .unwrap();
 
+            let alt_parts_before_escaping: Vec<&str> = i.alt.split('|').collect();
+            let alt_str = if alt_parts_before_escaping.len() > 0 {
+                alt_parts_before_escaping[0]
+            } else {
+                ""
+            };
+            let sources: Vec<String> = alt_parts_before_escaping
+                .iter()
+                .skip(1)
+                .map(|&elem| html_escape::encode_text(elem).to_string())
+                .collect();
+
+            let mut sources_json = String::new();
+
+            for s in &sources {
+                sources_json.push_str(format!("\"{}\",", s).as_str());
+            }
+
+            if sources_json.len() > 0 {
+                sources_json.remove(sources_json.len() - 1);
+            }
+
             if img.width() > 768 || img.height() > 400 {
                 let shrink_ratio = (768.0 / img.width() as f32).min(400.0 / img.height() as f32);
 
@@ -227,15 +250,14 @@ pub fn render_markdown(
                     (img.height() as f32 * shrink_ratio) as u32,
                     image::imageops::FilterType::Lanczos3,
                 );
-                //let hash = thumbhash::rgba_to_thumb_hash(img.width() as usize, img.height() as usize,   thumb.as_rgba8().unwrap().as_bytes());
 
                 let thumb_path = format!("{}/{}/thumb_{}", target_folder, folder, i.url);
                 thumb.save(&thumb_path).unwrap();
                 output.push_str(
                     format!(
-                        "<img class=\"img\" onclick=\"openImage(this)\" src=\"thumb_{}\" original_src=\"{}\" alt=\"{}\" />",
-                        &i.url,&i.url, &i.alt
-                    )
+                        "<img class=\"img\" onclick=\"openImage(this)\" src=\"thumb_{}\" original_src=\"{}\" alt=\"{}\" sources='[{}]' />",
+                        &i.url,&i.url,alt_str,sources_json
+                    ) 
                     .as_str(),
                 );
 
@@ -260,8 +282,8 @@ pub fn render_markdown(
                 let img_path = format!("{}/{}", folder, i.url);
                 output.push_str(
                     format!(
-                        "<img class=\"img\" onclick=\"openImage(this)\" src=\"{}\" alt=\"{}\" />",
-                        &i.url, &i.alt
+                        "<img class=\"img\" onclick=\"openImage(this)\" src=\"{}\" alt=\"{}\" sources='[{}]' />",
+                        &i.url, alt_str , sources_json
                     )
                     .as_str(),
                 );
@@ -285,11 +307,24 @@ pub fn render_markdown(
                 }
             }
 
-            if i.alt.len() > 0 {
-                output.push_str("<div class=\"img-title\">");
-                output.push_str(&i.alt);
-                output.push_str("</div>");
+            output.push_str("<div class=\"img-title\">");
+            output.push_str(alt_str);
+
+            for i in 0..sources.len() {
+                output.push_str(
+                    format!(
+                        "<a class=\"img-source\" target=\"_blank\" href=\"{}\">[SOURCE{}]</a>",
+                        sources[i],
+                        if sources.len() > 1 {
+                            format!(" {}", i + 1)
+                        } else {
+                            String::new()
+                        }
+                    )
+                    .as_str(),
+                );
             }
+            output.push_str("</div>");
             output.push_str("</div>");
 
             let copy_from = format!("{}/{}", folder, i.url);
