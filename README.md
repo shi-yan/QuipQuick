@@ -60,9 +60,9 @@ I made a few extensions with the principle of augmenting the markdown parser by 
 1. Embed YouTube Videos:
 
 ```markdown
-\```youtube
-<youtube_video_id>
-\```
+ ```youtube
+ <youtube_video_id>
+ ```
 ```
 Replace <youtube_video_id> with the actual ID of the YouTube video.
 
