@@ -222,9 +222,9 @@ pub fn render_markdown(
 
             let alt_parts_before_escaping: Vec<&str> = i.alt.split('|').collect();
             let alt_str = if alt_parts_before_escaping.len() > 0 {
-                alt_parts_before_escaping[0]
+                titlecase::titlecase(alt_parts_before_escaping[0])
             } else {
-                ""
+                String::from("")
             };
             let sources: Vec<String> = alt_parts_before_escaping
                 .iter()
@@ -256,8 +256,8 @@ pub fn render_markdown(
                 output.push_str(
                     format!(
                         "<img class=\"img\" onclick=\"openImage(this)\" src=\"thumb_{}\" original_src=\"{}\" alt=\"{}\" sources='[{}]' />",
-                        &i.url,&i.url,alt_str,sources_json
-                    ) 
+                        &i.url,&i.url,&alt_str,sources_json
+                    )
                     .as_str(),
                 );
 
@@ -283,7 +283,7 @@ pub fn render_markdown(
                 output.push_str(
                     format!(
                         "<img class=\"img\" onclick=\"openImage(this)\" src=\"{}\" alt=\"{}\" sources='[{}]' />",
-                        &i.url, alt_str , sources_json
+                        &i.url, &alt_str , sources_json
                     )
                     .as_str(),
                 );
@@ -308,7 +308,7 @@ pub fn render_markdown(
             }
 
             output.push_str("<div class=\"img-title\">");
-            output.push_str(alt_str);
+            output.push_str(&alt_str);
 
             for i in 0..sources.len() {
                 output.push_str(

@@ -39,7 +39,7 @@ pub fn new_post(
             .with_validator(non_empty_validator)
             .prompt()
         {
-            post_title
+            titlecase::titlecase( &post_title)
         } else {
             panic!("Wrong blog title!");
         };

@@ -69,7 +69,7 @@ impl Serialize for Post {
             .unwrap();
         map.serialize_entry("src", &self.src).unwrap();
         map.serialize_entry("md", &self.md).unwrap();
-        map.serialize_entry("title", &self.title).unwrap();
+        map.serialize_entry("title", titlecase::titlecase(&self.title).as_str()).unwrap();
 
         map.serialize_entry("tags", &self.tags).unwrap();
 
@@ -91,14 +91,14 @@ impl Serialize for Post {
         map.serialize_entry("read_time", &read_time_str).unwrap();
 
         if let Some(newer_post) = &self.newer_post {
-            map.serialize_entry("newer_post_title", &newer_post.0)
+            map.serialize_entry("newer_post_title", titlecase::titlecase(&newer_post.0).as_str())
                 .unwrap();
             map.serialize_entry("newer_post_folder", &newer_post.1)
                 .unwrap();
         }
 
         if let Some(older_post) = &self.older_post {
-            map.serialize_entry("older_post_title", &older_post.0)
+            map.serialize_entry("older_post_title", titlecase::titlecase(&older_post.0).as_str())
                 .unwrap();
             map.serialize_entry("older_post_folder", &older_post.1)
                 .unwrap();

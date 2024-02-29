@@ -9,6 +9,7 @@ use markdown::Options;
 use rss::{ChannelBuilder, GuidBuilder, ImageBuilder, Item, ItemBuilder};
 use serde_json::json;
 use slugify::slugify;
+use titlecase::titlecase;
 use std::cmp;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
@@ -290,7 +291,7 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
                     description: frontmatter.description,
                     src: folder.to_string(),
                     md: rendered_string,
-                    title: frontmatter.title,
+                    title: titlecase::titlecase( &frontmatter.title),
                     tags: tags,
                     word_count: word_count,
                     blog_title: blog_title.clone(),
@@ -335,14 +336,14 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
         for index in 0..post_list.len() {
             if index > 0 {
                 post_list[index].newer_post = Some((
-                    post_list[index - 1].title.clone(),
+                    titlecase::titlecase( &post_list[index - 1].title),
                     post_list[index - 1].src.clone(),
                 ));
             }
 
             if index < post_list.len() - 1 {
                 post_list[index].older_post = Some((
-                    post_list[index + 1].title.clone(),
+                    titlecase::titlecase(&post_list[index + 1].title),
                     post_list[index + 1].src.clone(),
                 ));
             }
@@ -378,7 +379,7 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
             let guid = GuidBuilder::default().value(permanent_link.clone()).build();
 
             let item = ItemBuilder::default()
-                .title(Some(post_list[index].title.clone()))
+                .title(Some(titlecase::titlecase( &post_list[index].title)))
                 .link(Some(permanent_link))
                 .description(Some(post_list[index].description.clone()))
                 .comments(post_list[index].discussion_url.clone())
