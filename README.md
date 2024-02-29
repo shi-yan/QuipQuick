@@ -51,3 +51,29 @@ After publishing, the target folder should contain the updated HTML pages ready 
 ## Customize theme
 
 After the blog boilerplate has been generate using the `new` command, there will be a `template` folder. Within the folder, you can find two html templates and one stylesheet. The template are written in the [handlebars](https://handlebarsjs.com/) template syntax. You can modify these files to change the theme.
+
+## Syntax
+QuipQuick's markdown parser is based on [markdown-rs](https://github.com/wooorm/markdown-rs), which supports the CommonMark syntax with a few extensions. This guide focuses on QuipQuick's specific extensions; for CommonMark syntax, please refer to [the official document](https://commonmark.org/).
+
+I made a few extensions with the principle of augmenting the markdown parser by adding features on top of the CommonMark syntax, without modifying the parser itself:
+
+1. Embed YouTube Videos:
+
+```markdown
+\```youtube
+<youtube_video_id>
+\```
+```
+Replace <youtube_video_id> with the actual ID of the YouTube video.
+
+2. Image Sources:
+
+QuipQuick allows you to credit image sources for images used in your blog. Use the following syntax:
+
+```markdown
+![alt_text|<source_1_url>|<source_2_url>](<image_url>)
+```
+
+Replace `alt_text` with the alternative text for the image and `source_1_url` and `source_2_url` ... with the URLs of the image sources. `image_url` should be the URL of the image you are embedding.
+
+Note: QuipQuick does not support image captions; the alternative text serves as the image caption.
