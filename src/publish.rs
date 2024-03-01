@@ -9,7 +9,6 @@ use markdown::Options;
 use rss::{ChannelBuilder, GuidBuilder, ImageBuilder, Item, ItemBuilder};
 use serde_json::json;
 use slugify::slugify;
-use titlecase::titlecase;
 use std::cmp;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
@@ -25,7 +24,7 @@ use markdown::to_mdast;
 
 fn generate_google_analytics_id(id: &str) -> String {
     return format!(
-        "<!-- Google tag (gtag.js) -->\n\
+    "<!-- Google tag (gtag.js) -->\n\
     <script async src=\"https://www.googletagmanager.com/gtag/js?id={}\"></script>\n\
     <script>\n\
       window.dataLayer = window.dataLayer || [];\n\
@@ -56,14 +55,11 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
     };
 
     if let toml::Value::Table(ref global) = value {
-        let mut target_folder = target.clone();
-        if global.contains_key("target") {
-            if let Some(target) = global.get("target") {
-                if let toml::Value::String(target_str) = target {
-                    target_folder = target_str.clone();
-                }
-            }
-        }
+        let target_folder = global
+            .get("target")
+            .and_then(|value| value.as_str())
+            .unwrap_or(&target)
+            .to_owned();
 
         let target_folder_exists = Path::new(&target_folder).exists();
 
@@ -97,109 +93,70 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
                 .expect(format!("Unable to create target folder: {}.", &target_folder).as_str());
         }
 
-        let blog_title = if global.contains_key("title") {
-            let mut title = String::new();
-            if let Some(title_value) = global.get("title") {
-                if let toml::Value::String(title_str) = title_value {
-                    title = title_str.clone();
-                }
-            }
-            title
-        } else {
-            String::new()
-        };
+        let blog_title = global
+            .get("title")
+            .and_then(|value| value.as_str())
+            .expect("Blog title is mandatory")
+            .to_owned();
 
-        let blog_description = if global.contains_key("description") {
-            let mut description = String::new();
-            if let Some(description_value) = global.get("description") {
-                if let toml::Value::String(description_str) = description_value {
-                    description = description_str.clone();
-                }
-            }
-            description
-        } else {
-            String::new()
-        };
+        let blog_description = global
+            .get("description")
+            .and_then(|value| value.as_str())
+            .expect("Blog description is mandatory")
+            .to_owned();
 
-        let repo = if global.contains_key("repo") {
-            let mut repo = String::new();
-            if let Some(repo_value) = global.get("repo") {
-                if let toml::Value::String(repo_str) = repo_value {
-                    repo = repo_str.clone();
-                }
-            }
-            repo
-        } else {
-            String::new()
-        };
+        let repo = global
+            .get("repo")
+            .and_then(|value| value.as_str())
+            .unwrap_or("")
+            .to_owned();
 
-        let blog_url = if global.contains_key("url") {
-            let mut url = String::new();
-            if let Some(url_value) = global.get("url") {
-                if let toml::Value::String(url_str) = url_value {
-                    url = url_str.clone();
-                }
-            }
-            url
-        } else {
-            String::new()
-        };
+        let blog_url = global
+            .get("url")
+            .and_then(|value| value.as_str())
+            .expect("Blog url is mandatory!")
+            .to_owned();
 
-        let google_analytics_id = if global.contains_key("google_analytics_id") {
-            let mut google_analytics_id = String::new();
-            if let Some(google_analytics_id_value) = global.get("google_analytics_id") {
-                if let toml::Value::String(google_analytics_id_str) = google_analytics_id_value {
-                    google_analytics_id = google_analytics_id_str.clone();
-                }
-            }
-            google_analytics_id
-        } else {
-            String::new()
-        };
+        let google_analytics_id = global
+            .get("google_analytics_id")
+            .and_then(|value| value.as_str())
+            .unwrap_or("")
+            .to_owned();
 
-        let discussion_url = if global.contains_key("discussion_url") {
-            let mut discussion_url = String::new();
-            if let Some(discussion_url_value) = global.get("discussion_url") {
-                if let toml::Value::String(discussion_url_str) = discussion_url_value {
-                    discussion_url = discussion_url_str.clone();
-                }
-            }
-            Some(discussion_url)
-        } else {
-            None
-        };
+        let discussion_url = global.get("discussion_url").and_then(|value| {
+            Some(
+                value
+                    .as_str()
+                    .expect("Discussion url has to be a string")
+                    .to_owned(),
+            )
+        });
 
-        let logo = if global.contains_key("logo") {
-            if let Some(logo_value) = global.get("logo") {
-                if let toml::Value::String(logo_path) = logo_value {
-                    if Path::new(logo_path).exists() {
-                        let img = ImageReader::open(logo_path).unwrap().decode().unwrap();
-                        let aspect_ratio = ((img.width() as f32 / img.height() as f32) - 1.0).abs();
-                        Some(SelectedMetaImage {
-                            pixels: img.width() * img.height(),
-                            aspect_ratio,
-                            url: logo_path.to_string(),
-                        })
-                    } else {
-                        None
-                    }
+        let logo = global.get("logo").and_then(|value| {
+            if let Some(logo_path) = value.as_str() {
+                if Path::new(logo_path).exists() {
+                    let img = ImageReader::open(logo_path).unwrap().decode().unwrap();
+                    let aspect_ratio = ((img.width() as f32 / img.height() as f32) - 1.0).abs();
+                    Some(SelectedMetaImage {
+                        pixels: img.width() * img.height(),
+                        aspect_ratio,
+                        url: logo_path.to_string(),
+                    })
                 } else {
                     None
                 }
             } else {
                 None
             }
-        } else {
-            None
-        };
+        });
 
-        let content = match global.get("content") {
-            None => {
-                println!("Warning: No content detected.");
-                return;
-            }
-            Some(content) => content,
-        };
+        let content = global
+            .get("content")
+            .expect("Warning: No content detected.")
+            .as_array()
+            .expect("Content needs to be an array.");
+
+        let gallery = global.get("gallery").and_then(|value| value.as_str());
 
         let template = fs::read_to_string("template/post.html")
             .expect("Should have been able to read the file");
@@ -209,110 +166,108 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
 
         let mut post_list: Vec<Post> = Vec::new();
 
-        if let toml::Value::Array(ref content) = content {
-            for c in content {
-                let folder = c.as_str().unwrap();
+        for c in content {
+            let folder = c.as_str().unwrap();
 
-                if folder == "tags" {
-                    println!("There shouldn't be a content folder named tags");
-                    return;
-                }
+            if folder == "tags" {
+                println!("There shouldn't be a content folder named tags");
+                return;
+            }
 
-                let target_folder_exists =
-                    Path::new(format!("{}/{}", target_folder, folder).as_str()).exists();
+            let target_folder_exists =
+                Path::new(format!("{}/{}", target_folder, folder).as_str()).exists();
 
-                if !target_folder_exists {
-                    fs::create_dir(format!("{}/{}", target_folder, folder).as_str())
-                        .expect(format!("Unable to create target folder: {}.", &folder).as_str());
-                }
+            if !target_folder_exists {
+                fs::create_dir(format!("{}/{}", target_folder, folder).as_str())
+                    .expect(format!("Unable to create target folder: {}.", &folder).as_str());
+            }
 
-                let path = format!("{}/content.md", folder);
+            let path = format!("{}/content.md", folder);
 
-                let markdown =
-                    fs::read_to_string(path).expect("Should have been able to read the file");
+            let markdown =
+                fs::read_to_string(path).expect("Should have been able to read the file");
 
-                //println!("markdown {}", markdown);
+            //println!("markdown {}", markdown);
 
-                let mut options = Options::gfm();
-                options.parse.constructs.math_text = true;
-                options.parse.constructs.frontmatter = true;
-                options.parse.constructs.math_flow = true;
+            let mut options = Options::gfm();
+            options.parse.constructs.math_text = true;
+            options.parse.constructs.frontmatter = true;
+            options.parse.constructs.math_flow = true;
 
-                let ast = to_mdast(&markdown, &options.parse).unwrap();
+            let ast = to_mdast(&markdown, &options.parse).unwrap();
 
-                //println!("{:?}", ast);
-                let mut rendered_string = String::new();
-                let mut word_count: usize = 0;
-                let mut frontmatter: FrontmatterInfo = FrontmatterInfo {
-                    title: String::new(),
-                    date: String::new(),
-                    description: String::new(),
-                    tags: vec![],
-                };
-                let mut selected_meta_image = logo.clone();
-                let mut langs: HashSet<String> = HashSet::new();
-                let mut footnotes: HashMap<String, Footnote> = HashMap::new();
+            //println!("{:?}", ast);
+            let mut rendered_string = String::new();
+            let mut word_count: usize = 0;
+            let mut frontmatter: FrontmatterInfo = FrontmatterInfo {
+                title: String::new(),
+                date: String::new(),
+                description: String::new(),
+                tags: vec![],
+            };
+            let mut selected_meta_image = logo.clone();
+            let mut langs: HashSet<String> = HashSet::new();
+            let mut footnotes: HashMap<String, Footnote> = HashMap::new();
 
-                render_markdown(
-                    &ast,
-                    &mut rendered_string,
-                    folder,
-                    &target_folder,
-                    &mut word_count,
-                    &mut frontmatter,
-                    &mut langs,
-                    &mut selected_meta_image,
-                    &mut footnotes,
-                );
-                if footnotes.len() > 0 {
-                    rendered_string += "<table class=\"footnote-def\">";
-                    for key in footnotes.keys().sorted() {
-                        let f = footnotes.get(key).unwrap();
-                        rendered_string += format!(
+            render_markdown(
+                &ast,
+                &mut rendered_string,
+                folder,
+                &target_folder,
+                &mut word_count,
+                &mut frontmatter,
+                &mut langs,
+                &mut selected_meta_image,
+                &mut footnotes,
+            );
+            if footnotes.len() > 0 {
+                rendered_string += "<table class=\"footnote-def\">";
+                for key in footnotes.keys().sorted() {
+                    let f = footnotes.get(key).unwrap();
+                    rendered_string += format!(
                             "<tr class=\"footnote-row\" id=\"footnote_{}\"><td>[{}]: </td><td>{}</td></tr>",
                             f.id, f.count, f.html
                         )
                         .as_str();
-                    }
-                    rendered_string += "</table>";
                 }
-
-                let d = parse_with_timezone(&frontmatter.date, &chrono::offset::Local).unwrap();
-                let mut tags: Vec<Tag> = Vec::new();
-                for t in &frontmatter.tags {
-                    tags.push(Tag {
-                        slug: slugify!(t),
-                        tag: t.to_lowercase(),
-                    });
-                }
-
-                let data = Post {
-                    date: d.into(),
-                    description: frontmatter.description,
-                    src: folder.to_string(),
-                    md: rendered_string,
-                    title: titlecase::titlecase( &frontmatter.title),
-                    tags: tags,
-                    word_count: word_count,
-                    blog_title: blog_title.clone(),
-                    blog_url: blog_url.clone(),
-                    repo: repo.clone(),
-                    quipquick_version: VERSION.to_string(),
-                    current_time: format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
-                    google_analytics: generate_google_analytics_id(&google_analytics_id),
-                    read_time: word_count as u32 / 238,
-                    older_post: None,
-                    newer_post: None,
-                    discussion_url: discussion_url.clone(),
-                    meta_img: if let Some(si) = selected_meta_image {
-                        Some(si.url)
-                    } else {
-                        None
-                    },
-                    langs: langs,
-                };
-                post_list.push(data.clone());
+                rendered_string += "</table>";
             }
+
+            let d = parse_with_timezone(&frontmatter.date, &chrono::offset::Local).unwrap();
+            let mut tags: Vec<Tag> = Vec::new();
+            for t in &frontmatter.tags {
+                tags.push(Tag {
+                    slug: slugify!(t),
+                    tag: t.to_lowercase(),
+                });
+            }
+
+            let data = Post {
+                date: d.into(),
+                description: frontmatter.description,
+                src: folder.to_string(),
+                md: rendered_string,
+                title: titlecase::titlecase(&frontmatter.title),
+                tags: tags,
+                word_count: word_count,
+                blog_title: blog_title.clone(),
+                blog_url: blog_url.clone(),
+                repo: repo.clone(),
+                quipquick_version: VERSION.to_string(),
+                current_time: format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
+                google_analytics: generate_google_analytics_id(&google_analytics_id),
+                read_time: word_count as u32 / 238,
+                older_post: None,
+                newer_post: None,
+                discussion_url: discussion_url.clone(),
+                meta_img: if let Some(si) = selected_meta_image {
+                    Some(si.url)
+                } else {
+                    None
+                },
+                langs: langs,
+            };
+            post_list.push(data.clone());
         }
 
         post_list.sort_by(|a, b| {
@@ -336,7 +291,7 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
         for index in 0..post_list.len() {
             if index > 0 {
                 post_list[index].newer_post = Some((
-                    titlecase::titlecase( &post_list[index - 1].title),
+                    titlecase::titlecase(&post_list[index - 1].title),
                     post_list[index - 1].src.clone(),
                 ));
             }
@@ -379,7 +334,7 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
             let guid = GuidBuilder::default().value(permanent_link.clone()).build();
 
             let item = ItemBuilder::default()
-                .title(Some(titlecase::titlecase( &post_list[index].title)))
+                .title(Some(titlecase::titlecase(&post_list[index].title)))
                 .link(Some(permanent_link))
                 .description(Some(post_list[index].description.clone()))
                 .comments(post_list[index].discussion_url.clone())
@@ -566,5 +521,9 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
         )
         .unwrap();
         fs::copy("template/style.css", format!("{}/style.css", target_folder)).unwrap();
+
+        if let Some(g) = gallery {
+            crate::gallery::gallery(&target_folder, &g);
+        }
     }
 }

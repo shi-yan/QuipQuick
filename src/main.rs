@@ -10,6 +10,7 @@ mod publish;
 mod write;
 use publish::publish;
 use write::new_post;
+mod gallery;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

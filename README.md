@@ -14,6 +14,7 @@ To address these challenges and to have the freedom to customize my blog extensi
 * Customizable theme.
 * Code block with syntax highlighting.
 * Images are resized for quick loading.
+* Image sources.
 
 ## Install
 

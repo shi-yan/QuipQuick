@@ -1,6 +1,5 @@
 use crate::frontmatter::FrontmatterInfo;
 use image::io::Reader as ImageReader;
-use itertools::Itertools;
 use markdown::mdast::Node::{
     self, BlockQuote, Break, Code, Delete, Emphasis, FootnoteDefinition, FootnoteReference,
     Heading, Html, Image, ImageReference, InlineCode, InlineMath, Link, LinkReference, List,
