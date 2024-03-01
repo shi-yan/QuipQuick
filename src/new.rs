@@ -31,7 +31,7 @@ pub fn populate_templates(base_folder: &str, force: bool) {
             .expect(format!("Unable to create template folder: {}.", &target_folder).as_str());
     }
 
-    let files = ["post.html", "index.html", "style.css"];
+    let files = ["post.html", "index.html", "style.css", "gallery.html"];
 
     for f in files {
         let file_path = format!("{}/{}", target_folder, f);

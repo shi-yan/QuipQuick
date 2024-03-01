@@ -55,6 +55,26 @@ body {
     margin-bottom: 20px;
 }
 
+.blog-gallery-link {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 32px;
+    line-height: 32px;
+    padding: 10px;
+    vertical-align: middle;
+    margin-bottom: 20px;
+    float: right;
+    text-decoration: none;
+    color: var(--dark-description-text-color);
+}
+
+.blog-gallery-link:hover {
+    color: var(--purple-link-text-color);
+}
+
+.blog-gallery-link:active {
+    color: inherit;
+}
+
 .blog-description {
     padding: 10px;
     margin: 10px;
@@ -521,6 +541,38 @@ code {
 
 .footnote-row p {
     margin: 8px
+}
+
+.gallery {
+    overflow-x: scroll;
+    overflow-y: hidden;
+    cursor: move;
+    max-width: 1200px;
+    border-radius: 8px;
+}
+
+.gallery-row {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    padding: 4px;
+}
+
+.gallery-video {
+    max-width: 480px;
+    max-height: 480px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.gallery-title {
+    font-family: "Open Sans", sans-serif;
+
+}
+
+.gallery-description {
+    font-family: "Open Sans", sans-serif;
+
 }
 
 ::-webkit-scrollbar-thumb {

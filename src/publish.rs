@@ -1,16 +1,14 @@
 use chrono::Local;
 use chrono::{DateTime, Datelike};
 use dateparser::parse_with_timezone;
-use handlebars::Handlebars;
-use handlebars::JsonValue;
+use handlebars::{Handlebars, JsonValue};
 use image::io::Reader as ImageReader;
 use itertools::Itertools;
 use markdown::Options;
 use rss::{ChannelBuilder, GuidBuilder, ImageBuilder, Item, ItemBuilder};
 use serde_json::json;
 use slugify::slugify;
-use std::cmp;
-use std::cmp::Ordering;
+use std::cmp::{self, Ordering};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
@@ -22,9 +20,9 @@ use crate::new::populate_templates;
 use crate::post::{Post, Tag};
 use markdown::to_mdast;
 
-fn generate_google_analytics_id(id: &str) -> String {
+pub fn generate_google_analytics_id(id: &str) -> String {
     return format!(
-    "<!-- Google tag (gtag.js) -->\n\
+        "<!-- Google tag (gtag.js) -->\n\
     <script async src=\"https://www.googletagmanager.com/gtag/js?id={}\"></script>\n\
     <script>\n\
       window.dataLayer = window.dataLayer || [];\n\
@@ -254,7 +252,6 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
                 blog_url: blog_url.clone(),
                 repo: repo.clone(),
                 quipquick_version: VERSION.to_string(),
-                current_time: format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
                 google_analytics: generate_google_analytics_id(&google_analytics_id),
                 read_time: word_count as u32 / 238,
                 older_post: None,
@@ -393,8 +390,8 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
                 "blog_description": blog_description,
                 "blog_url":blog_url,
                 "quipquick_version": VERSION,
-                "current_time": format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
-                "google_analytics": generate_google_analytics_id(&google_analytics_id)
+                "google_analytics": generate_google_analytics_id(&google_analytics_id),
+                "gallery": gallery
             });
 
             if let Some(logo) = &logo {
@@ -470,8 +467,8 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
                     "blog_description": blog_description,
                     "blog_url":blog_url,
                     "quipquick_version": VERSION,
-                    "current_time": format!("{}", current_time.format("%Y-%m-%d %H:%M:%S")),
-                    "google_analytics": generate_google_analytics_id(&google_analytics_id)
+                    "google_analytics": generate_google_analytics_id(&google_analytics_id),
+                    "gallery": gallery
                 });
 
                 if let Some(logo) = &logo {
@@ -523,7 +520,16 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
         fs::copy("template/style.css", format!("{}/style.css", target_folder)).unwrap();
 
         if let Some(g) = gallery {
-            crate::gallery::gallery(&target_folder, &g);
+            crate::gallery::generate_gallery(
+                &target_folder,
+                &g,
+                &repo,
+                &blog_title,
+                &blog_description,
+                &blog_url,
+                VERSION,
+                &google_analytics_id,
+            );
         }
     }
 }

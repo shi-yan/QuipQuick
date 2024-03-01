@@ -36,7 +36,6 @@ pub struct Post {
     pub blog_title: String,
     pub blog_url: String,
     pub quipquick_version: String,
-    pub current_time: String,
     pub google_analytics: String,
     pub read_time: u32,
     pub older_post: Option<(String, String)>,
@@ -79,8 +78,6 @@ impl Serialize for Post {
         map.serialize_entry("blog_title", &self.blog_title).unwrap();
         map.serialize_entry("quipquick_version", &self.quipquick_version)
             .unwrap();
-        map.serialize_entry("current_time", &self.current_time)
-            .unwrap();
         map.serialize_entry("google_analytics", &self.google_analytics)
             .unwrap();
         let read_time_str = if self.read_time > 1 {
@@ -114,7 +111,9 @@ impl Serialize for Post {
         }
 
         if self.langs.len() > 0 {
-            map.serialize_entry("langs", &self.langs).unwrap();
+            let mut sorted_langs:Vec<&String> = self.langs.iter().collect();
+            sorted_langs.sort();
+            map.serialize_entry("langs", &sorted_langs).unwrap();
         }
 
         map.end()
