@@ -380,7 +380,7 @@ pub fn render_markdown(
         Code(c) => {
             if let Some(lang) = &c.lang {
                 if lang == "youtube" {
-                    output.push_str(format!("<iframe class=\"video\" width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/{}\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>", &c.value).as_str());
+                    output.push_str(format!("<iframe class=\"video\" src=\"https://www.youtube.com/embed/{}\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>", &c.value).as_str());
                 } else {
                     output.push_str(
                         format!("<pre><code class=\"language-{} code-block\">", lang).as_str(),

@@ -13,7 +13,7 @@
 
 body {
     position: relative;
-    min-width: 100%;
+    width: 100%;
     min-height: 100%;
     background-color: var(--page-background-color);
     color: var(--normal-text-color);
@@ -115,6 +115,7 @@ body {
     margin-left: auto;
     margin-right: auto;
     display: block;
+    max-width: 100%;
 }
 
 #left {
@@ -123,6 +124,8 @@ body {
 
 #content {
     grid-area: content;
+    position: relative;
+    width: 100%;
 }
 
 #right {
@@ -234,7 +237,12 @@ body {
 
 article {
     text-wrap: wrap;
+    /*text-wrap: balance;*/
     word-break: break-word;
+    -webkit-hyphens: auto; 
+    -moz-hyphens: auto; 
+    -ms-hyphens: auto; 
+    hyphens: auto;
     font-family: "Open Sans", sans-serif;
     font-optical-sizing: auto;
     font-weight: 400;
@@ -242,6 +250,11 @@ article {
     font-size: 1rem;
     font-variation-settings:
         "wdth" 100;
+    max-width: 100%;
+    position:relative;
+    text-align: justify;
+    text-justify: inter-word;
+    padding: 1.2rem;
 }
 
 article h1 {
@@ -272,6 +285,16 @@ article p {
     font-size: 1em;
     line-height: calc(1ex / 0.32);
     margin: calc(1ex / 0.32) 0;
+    max-width: 100%;
+    position: relative;
+}
+
+article pre {
+    max-width: 100%;
+    position: relative;
+    overflow: hidden;
+    white-space:pre-wrap;
+    word-wrap: break-word;
 }
 
 blockquote {

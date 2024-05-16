@@ -17,7 +17,7 @@ While the lack of visual explanations isn't solely responsible for my frustratio
 
 [^b]: test 2 foot note
 
-Today, I delved deep into diffusion models, and once again, I encountered the frustration of a lack of visual and down-to-earth explanations. This experience drives me to document my current understanding, with the goal of creating an example that showcases my ideal explanation—one that incorporates visuals and practical examples, illustrating how I believe this topic should be presented.
+Today, I dived deep into diffusion models, and once again, I encountered the frustration of a lack of visual and down-to-earth explanations. This experience drives me to document my current understanding, with the goal of creating an example that showcases my ideal explanation—one that incorporates visuals and practical examples, illustrating how I believe this topic should be presented.
 
 Let's consider the scenario where we aim to find a function that accurately defines a volume resembling a cow. Our aim is to visually render this cow by sampling points inside its volume and illustrating them. With a sufficient number of sampled points, we can effectively draw the intricate details of a cow.
 
