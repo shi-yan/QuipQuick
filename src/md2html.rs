@@ -380,7 +380,8 @@ pub fn render_markdown(
         Code(c) => {
             if let Some(lang) = &c.lang {
                 if lang == "youtube" {
-                    output.push_str(format!("<iframe class=\"video\" src=\"https://www.youtube.com/embed/{}\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe>", &c.value).as_str());
+                    //https://www.howtocanvas.com/create-amazing-pages-in-canvas/responsive-youtube-iframes
+                    output.push_str(format!("<div style=\"width: 100%; min-width: 400px; max-width: 800px;\"><div style=\"position: relative; width: 100%; overflow: hidden; padding-top: 56.25%;\"><iframe class=\"video\" src=\"https://www.youtube.com/embed/{}\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe></div></div>", &c.value).as_str());
                 } else {
                     output.push_str(
                         format!("<pre><code class=\"language-{} code-block\">", lang).as_str(),
