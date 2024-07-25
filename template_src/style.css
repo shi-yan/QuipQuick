@@ -258,6 +258,7 @@ article {
     font-variation-settings:
         "wdth" 100;
     max-width: 100%;
+    width: calc(100% - 1.2rem);
     position:relative;
     text-align: justify;
     text-justify: inter-word;

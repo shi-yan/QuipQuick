@@ -240,6 +240,9 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
                 });
             }
 
+            let mut langs_sorted = Vec::from_iter(langs);
+            langs_sorted.sort();
+
             let data = Post {
                 date: d.into(),
                 description: frontmatter.description,
@@ -262,7 +265,7 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
                 } else {
                     None
                 },
-                langs: langs,
+                langs: langs_sorted,
             };
             post_list.push(data.clone());
         }

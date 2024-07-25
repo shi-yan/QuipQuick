@@ -42,7 +42,7 @@ pub struct Post {
     pub newer_post: Option<(String, String)>,
     pub discussion_url: Option<String>,
     pub meta_img: Option<String>,
-    pub langs: HashSet<String>,
+    pub langs: Vec<String>,
 }
 
 impl Serialize for Post {
