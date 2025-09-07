@@ -117,23 +117,41 @@
             const videoLoading = document.querySelector('.video-loading');
             const galleryItems = document.querySelectorAll('.gallery-item');
 
+            console.log('Gallery items found:', galleryItems.length);
+            console.log('Modal elements:', { videoModal, modalVideo, modalTitle, modalClose, videoLoading });
+
             // Open modal when gallery item is clicked
-            galleryItems.forEach(item => {
-                item.addEventListener('click', () => {
+            galleryItems.forEach((item, index) => {
+                console.log(`Setting up click handler for item ${index}`);
+                item.addEventListener('click', (e) => {
+                    console.log('Gallery item clicked:', item);
+                    e.preventDefault();
+                    
                     const videoSrc = item.getAttribute('data-video-src');
                     const videoTitle = item.getAttribute('data-video-title');
                     
-                    modalTitle.textContent = videoTitle;
-                    videoLoading.style.display = 'block';
-                    videoModal.style.display = 'block';
-                    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+                    console.log('Opening modal with:', { videoSrc, videoTitle });
                     
-                    // Load video
-                    modalVideo.src = videoSrc;
-                    modalVideo.addEventListener('loadeddata', function onLoad() {
-                        videoLoading.style.display = 'none';
-                        modalVideo.removeEventListener('loadeddata', onLoad);
-                    });
+                    if (videoModal && modalTitle && modalVideo) {
+                        modalTitle.textContent = videoTitle || 'Video';
+                        videoLoading.style.display = 'block';
+                        videoModal.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+                        
+                        // Load video
+                        modalVideo.src = videoSrc;
+                        modalVideo.addEventListener('loadeddata', function onLoad() {
+                            videoLoading.style.display = 'none';
+                            modalVideo.removeEventListener('loadeddata', onLoad);
+                        });
+                        
+                        // Fallback in case loadeddata doesn't fire
+                        setTimeout(() => {
+                            if (videoLoading.style.display !== 'none') {
+                                videoLoading.style.display = 'none';
+                            }
+                        }, 3000);
+                    }
                 });
             });
 
