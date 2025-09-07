@@ -576,11 +576,12 @@ code {
 
 .gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
     padding: 20px 0;
     max-width: 1200px;
     margin: 0 auto;
+    justify-items: center;
 }
 
 .gallery-item {
@@ -591,6 +592,8 @@ code {
     padding: 16px;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 400px;
 }
 
 .gallery-item:hover {
@@ -599,17 +602,90 @@ code {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
+.gallery-video-container {
+    position: relative;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #000;
+}
+
 .gallery-video {
     width: 100%;
     height: 200px;
-    object-fit: cover;
-    border-radius: 8px;
+    object-fit: contain;
+    display: block;
     cursor: pointer;
     transition: opacity 0.3s ease;
 }
 
-.gallery-video:hover {
-    opacity: 0.8;
+.gallery-play-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.gallery-video-container:hover .gallery-play-overlay {
+    opacity: 1;
+}
+
+.gallery-video-container.playing .gallery-play-overlay {
+    opacity: 0;
+}
+
+.gallery-play-button {
+    width: 60px;
+    height: 60px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #333;
+}
+
+.gallery-play-button:hover {
+    background-color: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+}
+
+.gallery-play-button svg {
+    width: 24px;
+    height: 24px;
+    margin-left: 2px;
+}
+
+.gallery-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.gallery-video-container.playing .gallery-progress-bar {
+    opacity: 1;
+}
+
+.gallery-progress {
+    height: 100%;
+    background-color: var(--purple-link-text-color);
+    width: 0%;
+    transition: width 0.1s ease;
 }
 
 .gallery-item-title {
@@ -722,10 +798,21 @@ code {
     
     .gallery-item {
         padding: 12px;
+        max-width: 350px;
     }
     
     .gallery-video {
         height: 180px;
+    }
+    
+    .gallery-play-button {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .gallery-play-button svg {
+        width: 20px;
+        height: 20px;
     }
     
     .gallery-item-title {
@@ -850,10 +937,21 @@ code {
     
     .gallery-item {
         padding: 10px;
+        max-width: 100%;
     }
     
     .gallery-video {
         height: 160px;
+    }
+    
+    .gallery-play-button {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .gallery-play-button svg {
+        width: 18px;
+        height: 18px;
     }
     
     .gallery-item-title {

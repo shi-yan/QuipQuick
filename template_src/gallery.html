@@ -66,8 +66,20 @@
             <div class="gallery">
                 {{#each images}}
                 <div class="gallery-item">
-                    <video class="gallery-video" title="{{title}}" webkit-playsinline="true" playsinline="true"
-                        muted="muted" src="{{file}}"></video>
+                    <div class="gallery-video-container">
+                        <video class="gallery-video" title="{{title}}" webkit-playsinline="true" playsinline="true"
+                            muted="muted" src="{{file}}" preload="metadata"></video>
+                        <div class="gallery-play-overlay">
+                            <div class="gallery-play-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="gallery-progress-bar">
+                            <div class="gallery-progress"></div>
+                        </div>
+                    </div>
                     <div class="gallery-item-title">{{title}}</div>
                 </div>
                 {{/each}}
@@ -85,17 +97,65 @@
             }
             setBuildTime();
 
-            const videos = document.querySelectorAll('.gallery-video');
+            const videoContainers = document.querySelectorAll('.gallery-video-container');
 
-            videos.forEach(video => {
-                video.addEventListener('mouseenter', () => {
-                    video.play();
+            videoContainers.forEach(container => {
+                const video = container.querySelector('.gallery-video');
+                const playButton = container.querySelector('.gallery-play-button');
+                const progressBar = container.querySelector('.gallery-progress');
+                let isPlaying = false;
+
+                // Handle play button click
+                playButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleVideo();
                 });
 
-                video.addEventListener('mouseleave', () => {
-                    video.pause();
-                    video.currentTime = 0;
+                // Handle video click
+                video.addEventListener('click', () => {
+                    toggleVideo();
                 });
+
+                // Update progress bar
+                video.addEventListener('timeupdate', () => {
+                    if (video.duration) {
+                        const progress = (video.currentTime / video.duration) * 100;
+                        progressBar.style.width = progress + '%';
+                    }
+                });
+
+                // Handle video end
+                video.addEventListener('ended', () => {
+                    container.classList.remove('playing');
+                    isPlaying = false;
+                    progressBar.style.width = '0%';
+                });
+
+                // Toggle play/pause
+                function toggleVideo() {
+                    if (isPlaying) {
+                        video.pause();
+                        container.classList.remove('playing');
+                        isPlaying = false;
+                    } else {
+                        video.play();
+                        container.classList.add('playing');
+                        isPlaying = true;
+                    }
+                }
+
+                // Pause video when it goes out of view (optional)
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (!entry.isIntersecting && isPlaying) {
+                            video.pause();
+                            container.classList.remove('playing');
+                            isPlaying = false;
+                        }
+                    });
+                }, { threshold: 0.1 });
+
+                observer.observe(container);
             });
         </script>
         {{{google_analytics}}}
