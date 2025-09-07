@@ -67,8 +67,10 @@
                 {{#each images}}
                 <div class="gallery-item" data-video-src="{{file}}" data-video-title="{{title}}">
                     <div class="gallery-video-container">
-                        <video class="gallery-video-preview" title="{{title}}" webkit-playsinline="true" playsinline="true"
-                            muted="muted" src="{{file}}" preload="metadata"></video>
+                        <img class="gallery-video-preview" src="{{preview}}" alt="{{title}}" title="{{title}}" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <video class="gallery-video-fallback" title="{{title}}" webkit-playsinline="true" playsinline="true"
+                            muted="muted" src="{{file}}" preload="metadata" style="display:none;"></video>
                         <div class="gallery-video-overlay">
                             <div class="gallery-play-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
