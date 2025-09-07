@@ -575,25 +575,51 @@ code {
 }
 
 .gallery {
-    overflow-x: scroll;
-    overflow-y: hidden;
-    cursor: move;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
     max-width: 1200px;
-    border-radius: 8px;
+    margin: 0 auto;
 }
 
-.gallery-row {
+.gallery-item {
     display: flex;
-    flex-direction: row;
-    gap: 12px;
-    padding: 4px;
+    flex-direction: column;
+    background-color: var(--lighter-card-background-color);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.gallery-item:hover {
+    background-color: var(--card-hover-background-color);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .gallery-video {
-    max-width: 480px;
-    max-height: 480px;
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
     border-radius: 8px;
     cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.gallery-video:hover {
+    opacity: 0.8;
+}
+
+.gallery-item-title {
+    margin-top: 12px;
+    font-family: "Open Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--normal-text-color);
+    text-align: center;
+    line-height: 1.4;
 }
 
 .gallery-title {
@@ -619,4 +645,271 @@ code {
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
+}
+
+/* Mobile responsive styles */
+@media only screen and (max-width: 768px) {
+    /* Adjust main grid for tablets */
+    #page {
+        grid-template-columns: 10px 1fr 10px;
+        grid-template-rows: auto auto 60px;
+    }
+    
+    /* Header adjustments */
+    #header {
+        padding: 8px 16px;
+        font-size: 24px;
+        line-height: 28px;
+    }
+    
+    /* Blog title adjustments */
+    .blog-title {
+        font-size: 36px;
+        line-height: 36px;
+        padding: 8px;
+    }
+    
+    .blog-description {
+        font-size: 18px;
+        margin: 8px;
+        padding: 8px;
+    }
+    
+    /* Content items */
+    .content-item {
+        margin: 8px;
+        padding: 12px;
+    }
+    
+    .content-item-title {
+        font-size: 32px;
+        margin: 6px;
+    }
+    
+    .content-item-description {
+        margin-left: 12px;
+        font-size: 16px;
+    }
+    
+    .content-item-meta {
+        margin-left: 12px;
+        font-size: 10px;
+    }
+    
+    /* Post content */
+    article {
+        padding: 0.8rem;
+        width: calc(100% - 0.8rem);
+        font-size: 1rem;
+    }
+    
+    #title {
+        font-size: 48px;
+        margin-top: 40px;
+    }
+    
+    #meta {
+        margin: 8px;
+        font-size: 11px;
+    }
+    
+    /* Gallery adjustments */
+    .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        padding: 16px 10px;
+    }
+    
+    .gallery-item {
+        padding: 12px;
+    }
+    
+    .gallery-video {
+        height: 180px;
+    }
+    
+    .gallery-item-title {
+        font-size: 13px;
+        margin-top: 10px;
+    }
+    
+    /* Navigation links */
+    .older_newer_link_section {
+        grid-template-columns: 1fr;
+        grid-template-areas: 
+            "left"
+            "right";
+        gap: 16px;
+    }
+    
+    .older_newer_link_right {
+        text-align: left;
+        grid-area: right;
+        border-right: none;
+        border-left-style: solid;
+        border-left-width: 2px;
+        border-left-color: transparent;
+        padding-left: 16px;
+        padding-right: 4px;
+    }
+    
+    .older_newer_link_right:hover {
+        border-right: none;
+        border-left-color: var(--normal-text-color);
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    /* Tighter spacing for mobile */
+    #page {
+        grid-template-columns: 5px 1fr 5px;
+    }
+    
+    /* Header mobile */
+    #header {
+        padding: 6px 12px;
+        font-size: 20px;
+        line-height: 24px;
+    }
+    
+    /* Blog title mobile */
+    .blog-title {
+        font-size: 28px;
+        line-height: 28px;
+        padding: 6px;
+    }
+    
+    .blog-description {
+        font-size: 16px;
+        margin: 6px;
+        padding: 6px;
+    }
+    
+    /* Content items mobile */
+    .content-item {
+        margin: 6px;
+        padding: 10px;
+    }
+    
+    .content-item-title {
+        font-size: 28px;
+        margin: 4px;
+    }
+    
+    .content-item-description {
+        margin-left: 8px;
+        font-size: 15px;
+    }
+    
+    .content-item-meta {
+        margin-left: 8px;
+        font-size: 9px;
+    }
+    
+    /* Post content mobile */
+    article {
+        padding: 0.6rem;
+        width: calc(100% - 0.6rem);
+        font-size: 0.95rem;
+        text-align: left;
+    }
+    
+    article h1 {
+        font-size: 2em;
+    }
+    
+    article h2 {
+        font-size: 1.75em;
+    }
+    
+    article h3 {
+        font-size: 1.5em;
+    }
+    
+    article h4 {
+        font-size: 1.25em;
+    }
+    
+    #title {
+        font-size: 36px;
+        margin-top: 30px;
+    }
+    
+    #meta {
+        margin: 6px;
+        font-size: 10px;
+        line-height: 14px;
+    }
+    
+    /* Gallery mobile */
+    .gallery {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 12px 5px;
+    }
+    
+    .gallery-item {
+        padding: 10px;
+    }
+    
+    .gallery-video {
+        height: 160px;
+    }
+    
+    .gallery-item-title {
+        font-size: 12px;
+        margin-top: 8px;
+    }
+    
+    /* Navigation mobile */
+    .older_newer_link {
+        font-size: 20px;
+        line-height: 22px;
+    }
+    
+    /* Pages navigation */
+    .pages {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .page-link {
+        padding: 6px 8px;
+        margin: 2px;
+        font-size: 14px;
+    }
+    
+    /* Modal adjustments */
+    .modal {
+        padding-top: 50px;
+    }
+    
+    .modal-content {
+        width: 95%;
+    }
+    
+    #caption {
+        width: 95%;
+        font-size: 14px;
+        height: auto;
+        padding: 8px 0;
+    }
+    
+    /* Code blocks mobile */
+    .code-block {
+        overflow-x: auto;
+    }
+    
+    /* Image containers */
+    .img-container img {
+        max-height: 300px;
+    }
+    
+    /* Comment button */
+    .comment {
+        font-size: 18px;
+        line-height: 24px;
+        margin: 6px;
+        padding: 8px;
+    }
 }
