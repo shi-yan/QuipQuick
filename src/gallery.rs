@@ -151,7 +151,7 @@ pub fn generate_gallery(
         Ok(value) => value,
     };
 
-    if let toml::Value::Array(ref galleries) = value.get("galleries").unwrap() {
+    if let toml::Value::Array(galleries) = value.get("galleries").unwrap() {
         for g in galleries {
             if let toml::Value::Table(gallery) = g {
                 let title = gallery
