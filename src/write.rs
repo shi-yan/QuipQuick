@@ -12,7 +12,7 @@ use std::{
 };
 use chrono::Local;
 use chrono::DateTime;
-use toml_edit::{Document, value};
+use toml_edit::{DocumentMut};
 
 pub fn new_post(
     title: Option<String>,
@@ -86,7 +86,7 @@ pub fn new_post(
 
         let contents = fs::read_to_string("quipquick.toml").expect("Should have been able to read the file");
 
-        let mut doc = contents.parse::<Document>().expect("Invalid quipquick.toml");
+        let mut doc = contents.parse::<DocumentMut>().expect("Invalid quipquick.toml");
 
         let content_array = doc["content"].as_array_mut().expect("Not content array in manifest");
 

@@ -87,7 +87,7 @@ fn main() {
         Commands::Pub {
             target,
             force_overwrite_theme,
-            prefix,
+            prefix: _,
         } => {
             publish(target, force_overwrite_theme);
         }

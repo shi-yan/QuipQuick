@@ -1,7 +1,7 @@
 use crate::publish::generate_google_analytics_id;
 use chrono::{DateTime, Datelike, Local};
 use dateparser::parse_with_timezone;
-use handlebars::{Handlebars, JsonValue};
+use handlebars::{Handlebars};
 use serde::ser::{Serialize, SerializeMap, Serializer};
 use std::cmp::Ordering;
 use std::fs;

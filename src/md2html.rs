@@ -1,7 +1,7 @@
 use crate::frontmatter::FrontmatterInfo;
-use image::io::Reader as ImageReader;
+use image::ImageReader;
 use markdown::mdast::Node::{
-    self, BlockQuote, Break, Code, Delete, Emphasis, FootnoteDefinition, FootnoteReference,
+    self, Blockquote, Break, Code, Delete, Emphasis, FootnoteDefinition, FootnoteReference,
     Heading, Html, Image, ImageReference, InlineCode, InlineMath, Link, LinkReference, List,
     ListItem, Math, MdxFlowExpression, MdxJsxFlowElement, MdxJsxTextElement, MdxTextExpression,
     MdxjsEsm, Paragraph, Root, Strong, Text, ThematicBreak, Toml, Yaml,
@@ -71,7 +71,7 @@ pub fn render_markdown(
                 );
             }
         }
-        BlockQuote(b) => {
+        Blockquote(b) => {
             output.push_str("<blockquote>");
 
             for n in &b.children {

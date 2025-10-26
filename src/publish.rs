@@ -2,7 +2,7 @@ use chrono::Local;
 use chrono::{DateTime, Datelike};
 use dateparser::parse_with_timezone;
 use handlebars::{Handlebars, JsonValue};
-use image::io::Reader as ImageReader;
+use image::ImageReader;
 use itertools::Itertools;
 use markdown::Options;
 use rss::{ChannelBuilder, GuidBuilder, ImageBuilder, Item, ItemBuilder};
