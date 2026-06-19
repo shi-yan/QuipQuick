@@ -66,7 +66,7 @@ pub fn new_post(
             }
         } else {
             fs::create_dir_all(&default_post_folder)
-                .expect(format!("Unable to create post folder: {}.", &default_post_folder).as_str());
+                .unwrap_or_else(|_| panic!("Unable to create post folder: {}.", &default_post_folder));
         }
 
 

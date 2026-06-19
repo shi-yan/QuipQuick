@@ -117,6 +117,7 @@ impl Serialize for Gallery {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn generate_gallery(
     target_folder: &str,
     gallery_path: &str,
@@ -137,15 +138,15 @@ pub fn generate_gallery(
 
     if !target_folder_exists {
         fs::create_dir(format!("{}/{}", target_folder, gallery_path).as_str())
-            .expect(format!("Unable to create gallery folder: {}.", &gallery_path).as_str());
+            .unwrap_or_else(|_| panic!("Unable to create gallery folder: {}.", &gallery_path));
     }
 
     let contents = fs::read_to_string(format!("{}/content.toml", gallery_path).as_str())
         .expect("Should have been able to read the file");
 
-    let value = match contents.parse::<Value>() {
+    let value = match toml::from_str::<Value>(&contents) {
         Err(error) => {
-            println!("Toml Parsing Error: {}", error.to_string());
+            println!("Toml Parsing Error: {}", error);
             return;
         }
         Ok(value) => value,
@@ -216,8 +217,8 @@ pub fn generate_gallery(
 
                         image_list.push(Image {
                             date: d.into(),
-                            title: title,
-                            file: file,
+                            title,
+                            file,
                             preview: preview_file,
                         });
                     }
@@ -225,11 +226,11 @@ pub fn generate_gallery(
 
                 image_list.sort_by(|a, b| {
                     if a.date < b.date {
-                        return Ordering::Greater;
+                        Ordering::Greater
                     } else if a.date == b.date {
-                        return Ordering::Equal;
+                        Ordering::Equal
                     } else {
-                        return Ordering::Less;
+                        Ordering::Less
                     }
                 });
 
@@ -260,7 +261,7 @@ pub fn generate_gallery(
                     blog_description: blog_description.to_owned(),
                     blog_url:blog_url.to_owned(),
                     quipquick_version: quipquick_version.to_owned(),
-                    google_analytics: generate_google_analytics_id(&google_analytics_id)
+                    google_analytics: generate_google_analytics_id(google_analytics_id)
                 };
 
                 let reg = Handlebars::new();

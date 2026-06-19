@@ -109,7 +109,7 @@ impl Serialize for Post {
             map.serialize_entry("meta_img", mi).unwrap();
         }
 
-        if self.langs.len() > 0 {
+        if !self.langs.is_empty() {
             let mut sorted_langs:Vec<&String> = self.langs.iter().collect();
             sorted_langs.sort();
             map.serialize_entry("langs", &sorted_langs).unwrap();
