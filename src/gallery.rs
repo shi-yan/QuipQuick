@@ -143,7 +143,7 @@ pub fn generate_gallery(
     let contents = fs::read_to_string(format!("{}/content.toml", gallery_path).as_str())
         .expect("Should have been able to read the file");
 
-    let value = match contents.parse::<Value>() {
+    let value = match toml::from_str::<Value>(&contents) {
         Err(error) => {
             println!("Toml Parsing Error: {}", error.to_string());
             return;
