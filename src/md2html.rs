@@ -22,6 +22,7 @@ pub struct Footnote {
     pub html: String,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn render_markdown(
     node: &Node,
     output: &mut String,
@@ -215,12 +216,12 @@ pub fn render_markdown(
             output.push_str("<div class=\"img-container\">");
 
             let img = ImageReader::open(format!("{}/{}", folder, i.url))
-                .expect(format!("Image {}/{} is not found.", folder, i.url).as_str())
+                .unwrap_or_else(|_| panic!("Image {}/{} is not found.", folder, i.url))
                 .decode()
                 .unwrap();
 
             let alt_parts_before_escaping: Vec<&str> = i.alt.split('|').collect();
-            let alt_str = if alt_parts_before_escaping.len() > 0 {
+            let alt_str = if !alt_parts_before_escaping.is_empty() {
                 titlecase::titlecase(alt_parts_before_escaping[0])
             } else {
                 String::from("")
@@ -237,7 +238,7 @@ pub fn render_markdown(
                 sources_json.push_str(format!("\"{}\",", s).as_str());
             }
 
-            if sources_json.len() > 0 {
+            if !sources_json.is_empty() {
                 sources_json.remove(sources_json.len() - 1);
             }
 

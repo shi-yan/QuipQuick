@@ -21,7 +21,7 @@ use crate::post::{Post, Tag};
 use markdown::to_mdast;
 
 pub fn generate_google_analytics_id(id: &str) -> String {
-    return format!(
+    format!(
         "<!-- Google tag (gtag.js) -->\n\
     <script async src=\"https://www.googletagmanager.com/gtag/js?id={}\"></script>\n\
     <script>\n\
@@ -31,7 +31,7 @@ pub fn generate_google_analytics_id(id: &str) -> String {
       gtag('config', '{}');\n\
     </script>",
         id, id
-    );
+    )
 }
 
 pub fn publish(target: String, force_overwrite_theme: bool) {
@@ -46,7 +46,7 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
 
     let value = match toml::from_str::<Value>(&contents) {
         Err(error) => {
-            println!("Toml Parsing Error: {}", error.to_string());
+            println!("Toml Parsing Error: {}", error);
             return;
         }
         Ok(value) => value,
@@ -71,8 +71,8 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
             let items = fs::read_dir(&target_folder).unwrap();
 
             for path in items {
-                if let Ok(item) = path {
-                    if !item.file_name().eq_ignore_ascii_case(".git")
+                if let Ok(item) = path
+                    && !item.file_name().eq_ignore_ascii_case(".git")
                         && !item.file_name().eq_ignore_ascii_case("README.md")
                     {
                         println!("Removing {:?} {:?}", item.path(), item.file_name());
@@ -84,11 +84,10 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
                             }
                         }
                     }
-                }
             }
         } else {
             fs::create_dir(&target_folder)
-                .expect(format!("Unable to create target folder: {}.", &target_folder).as_str());
+                .unwrap_or_else(|_| panic!("Unable to create target folder: {}.", &target_folder));
         }
 
         let blog_title = global
@@ -121,14 +120,10 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
             .unwrap_or("")
             .to_owned();
 
-        let discussion_url = global.get("discussion_url").and_then(|value| {
-            Some(
-                value
+        let discussion_url = global.get("discussion_url").map(|value| value
                     .as_str()
                     .expect("Discussion url has to be a string")
-                    .to_owned(),
-            )
-        });
+                    .to_owned());
 
         let logo = global.get("logo").and_then(|value| {
             if let Some(logo_path) = value.as_str() {
@@ -177,7 +172,7 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
 
             if !target_folder_exists {
                 fs::create_dir(format!("{}/{}", target_folder, folder).as_str())
-                    .expect(format!("Unable to create target folder: {}.", &folder).as_str());
+                    .unwrap_or_else(|_| panic!("Unable to create target folder: {}.", &folder));
             }
 
             let path = format!("{}/content.md", folder);
@@ -218,7 +213,7 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
                 &mut selected_meta_image,
                 &mut footnotes,
             );
-            if footnotes.len() > 0 {
+            if !footnotes.is_empty() {
                 rendered_string += "<table class=\"footnote-def\">";
                 for key in footnotes.keys().sorted() {
                     let f = footnotes.get(key).unwrap();
@@ -249,8 +244,8 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
                 src: folder.to_string(),
                 md: rendered_string,
                 title: titlecase::titlecase(&frontmatter.title),
-                tags: tags,
-                word_count: word_count,
+                tags,
+                word_count,
                 blog_title: blog_title.clone(),
                 blog_url: blog_url.clone(),
                 repo: repo.clone(),
@@ -272,11 +267,11 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
 
         post_list.sort_by(|a, b| {
             if a.date < b.date {
-                return Ordering::Greater;
+                Ordering::Greater
             } else if a.date == b.date {
-                return Ordering::Equal;
+                Ordering::Equal
             } else {
-                return Ordering::Less;
+                Ordering::Less
             }
         });
 
@@ -352,24 +347,20 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
                 .link(blog_url.clone())
                 .build();
 
-            let channel = ChannelBuilder::default()
+            ChannelBuilder::default()
                 .title(blog_title.clone())
                 .link(blog_url.clone())
                 .description(blog_description.clone())
                 .items(rss_items)
                 .image(Some(rss_image))
-                .build();
-
-            channel
+                .build()
         } else {
-            let channel = ChannelBuilder::default()
+            ChannelBuilder::default()
                 .title(blog_title.clone())
                 .link(blog_url.clone())
                 .description(blog_description.clone())
                 .items(rss_items)
-                .build();
-
-            channel
+                .build()
         };
         fs::write(rss_output_path, channel.to_string()).unwrap();
         let index_template = fs::read_to_string("template/index.html")
@@ -441,7 +432,7 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
 
             if !target_folder_exists {
                 fs::create_dir_all(format!("{}/tags/{}", target_folder, folder).as_str())
-                    .expect(format!("Unable to create tag folder: {}.", &folder).as_str());
+                    .unwrap_or_else(|_| panic!("Unable to create tag folder: {}.", &folder));
             }
 
             let tag_page_size: u32 = (t.1 .1.len() as f32 / PAGE_ITEM_COUNT as f32).ceil() as u32;
@@ -525,7 +516,7 @@ pub fn publish(target: String, force_overwrite_theme: bool) {
         if let Some(g) = gallery {
             crate::gallery::generate_gallery(
                 &target_folder,
-                &g,
+                g,
                 &repo,
                 &blog_title,
                 &blog_description,

@@ -28,7 +28,7 @@ pub fn populate_templates(base_folder: &str, force: bool) {
         }
     } else {
         fs::create_dir(&target_folder)
-            .expect(format!("Unable to create template folder: {}.", &target_folder).as_str());
+            .unwrap_or_else(|_| panic!("Unable to create template folder: {}.", &target_folder));
     }
 
     let files = ["post.html", "index.html", "style.css", "gallery.html"];
@@ -112,7 +112,7 @@ pub fn new_blog(
             }
         } else {
             fs::create_dir_all(&blog_folder)
-                .expect(format!("Unable to create blog folder: {}.", &blog_folder).as_str());
+                .unwrap_or_else(|_| panic!("Unable to create blog folder: {}.", &blog_folder));
         }
 
         let default_blog_target = if let Some(t) = target {
@@ -152,13 +152,8 @@ pub fn new_blog(
                 }
             }
         } else {
-            fs::create_dir_all(&full_blog_target).expect(
-                format!(
-                    "Unable to create blog target folder: {}.",
-                    &full_blog_target
-                )
-                .as_str(),
-            );
+            fs::create_dir_all(&full_blog_target).unwrap_or_else(|_| panic!("Unable to create blog target folder: {}.",
+                    &full_blog_target));
         }
 
         let file = File::create(format!("{}/quipquick.toml", &blog_folder)).unwrap();
@@ -215,7 +210,7 @@ pub fn new_blog(
 
         if !Path::new(&dummy_folder).exists() {
             fs::create_dir_all(&dummy_folder)
-                .expect(format!("Unable to create dummy post folder: {}.", &dummy_folder).as_str());
+                .unwrap_or_else(|_| panic!("Unable to create dummy post folder: {}.", &dummy_folder));
         }
 
         let dummy_post_file = Template::get("content.md").unwrap();
